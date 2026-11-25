@@ -16,16 +16,28 @@ Este arquivo é o painel central de orientação do projeto. Conforme cada taref
 
 ## Fase 1 — Configurar a Home (Área Central / Hub)
 
-> A **Home** é a área segura onde o jogador inicia e passa boa parte do tempo entre explorações. Diferente de masmorras específicas, ela **não deve ser tão escura** — precisa ser clara, legível e convidativa.
+> A **Home** é a área segura onde o jogador inicia e passa boa parte do tempo entre explorações. Diferente de masmorras específicas (que serão mais escuras), ela deve ter uma estética **clara, majestosa e bem iluminada**.
+>
+> **Referências Visuais:** Salão do **Rei Mago (*Black Clover*)** (grandioso, mármore/cerâmica branca, dourado, azul-real/safira, clima mágico claro) + iluminação solar lateral do **Castelo do Pico Alto (*Dead Cells*)**.
 
-- [ ] **Revisar iluminação e atmosfera da Home:** clarear o ambiente (luz diurna suave / entardecer claro ou céu aberto bem iluminado), reduzindo a neblina pesada e mantendo contraste nítido.
-- [ ] **Definir o layout funcional da Home:**
-  - [ ] Praça central de chegada / ponto de respawn
-  - [ ] Espaço para **Ferreiro / Forja** (modificação e melhoria de armaduras e armas)
-  - [ ] Espaço para **Mercador / Loja** (compra e venda de itens e equipamentos)
-  - [ ] Espaço para **Baú / Armazenamento**
-  - [ ] Portal / passagem bem sinalizada para as **Masmorras e Áreas de Exploração**
-- [ ] **Refinar cenário e detalhes visuais da Home:** melhorar piso, vegetação/arquitetura e props para dar identidade própria à base.
+- [x] **Transformar o mapa em um Salão Circular (Rotunda):**
+  - [x] Paredes curvas altas nas costas e laterais com colunas brancas e detalhes dourados.
+  - [x] Borda/balaustrada frontal baixa para nunca obstruir a visão isométrica do personagem.
+- [x] **Criar piso de cerâmica branca desenhada:**
+  - [x] Textura procedural de cerâmica/mármore branco-marfim polido com anéis geométricos, bordas finas e rosácea/brasão arcano dourado e azul-real no centro.
+- [x] **Janelões de vidro e iluminação solar lateral:**
+  - [x] Janelas altas arqueadas de vidro/vitral nas laterais do salão.
+  - [x] Feixes diagonais de luz do sol (raios volumétricos) atravessando o salão e projetando brilho no chão, com partículas finas de poeira dourada flutuando na luz.
+  - [x] Iluminação geral clara, quente e legível (removendo o excesso de escuridão e neblina pesada da v0.1).
+- [x] **Criar portas monumentais super estilizadas:**
+  - [x] **Centro-Norte (Principal):** Grande Portal das Masmorras / Expedições (arco ornamentado branco e dourado, porta dupla trabalhada, estandartes e selo arcano luminoso).
+  - [x] **Esquerda (Oeste):** Porta estilizada da **Forja / Armaduras** (futura área de modificação e melhoria de equipamentos).
+  - [x] **Direita (Leste):** Porta estilizada da **Loja / Mercado Real** (futura área de compra e venda).
+  - [x] Feedback discreto no HUD ao se aproximar de cada porta.
+- [x] **Preparar espaços funcionais futuros na Home:**
+  - [x] Áreas definidas para NPCs (ferreiro, mercador) e baú de armazenamento.
+- [ ] **Enriquecer o background / vista externa ao redor do Salão:**
+  - [ ] Melhorar o horizonte e o cenário do lado de fora da balaustrada e dos janelões (céu detalhado, nuvens, montanhas/torres ou vista da capital real ao longe) para dar a impressão de um lugar ainda mais bonito e vivo.
 
 ---
 

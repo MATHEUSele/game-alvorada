@@ -16,17 +16,21 @@ export function resolveCollisions(
   playerRadius: number,
   circles: readonly CircleCollider[],
   boxes: readonly BoxCollider[],
-  boundsLimit: number,
+  boundsRadius: number,
 ): void {
   const iterations = 3;
+  const maxR = Math.max(0.5, boundsRadius - playerRadius);
+  const maxRSq = maxR * maxR;
 
   for (let iter = 0; iter < iterations; iter++) {
-    // Limites externos do pátio
-    const maxCoord = boundsLimit - playerRadius;
-    if (pos.x < -maxCoord) pos.x = -maxCoord;
-    if (pos.x > maxCoord) pos.x = maxCoord;
-    if (pos.z < -maxCoord) pos.z = -maxCoord;
-    if (pos.z > maxCoord) pos.z = maxCoord;
+    // Limite circular suave da rotunda
+    const radialDistSq = pos.x * pos.x + pos.z * pos.z;
+    if (radialDistSq > maxRSq) {
+      const radialDist = Math.sqrt(radialDistSq);
+      const scale = maxR / radialDist;
+      pos.x *= scale;
+      pos.z *= scale;
+    }
 
     // Colisão círculo vs caixa (AABB) com deslizamento suave
     for (let i = 0; i < boxes.length; i++) {
@@ -45,7 +49,6 @@ export function resolveCollisions(
           pos.x += (dx / dist) * overlap;
           pos.z += (dz / dist) * overlap;
         } else {
-          // Centro do jogador entrou dentro da caixa: empurra pela menor penetração
           const penLeft = Math.abs(pos.x - box.minX);
           const penRight = Math.abs(box.maxX - pos.x);
           const penTop = Math.abs(pos.z - box.minZ);
@@ -60,7 +63,7 @@ export function resolveCollisions(
       }
     }
 
-    // Colisão círculo vs círculo (pilares, braseiros, etc.)
+    // Colisão círculo vs círculo (colunas, bigorna, baú, etc.)
     for (let i = 0; i < circles.length; i++) {
       const c = circles[i];
       const dx = pos.x - c.x;

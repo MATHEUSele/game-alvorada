@@ -11,15 +11,15 @@ Protótipo de um **Action RPG (ARPG)** isométrico 3D rodando direto no navegado
   - **Área Central (Hub Seguro):** ponto de encontro mais claro e legível onde o jogador poderá interagir com lojas, ferreiro e sistemas para comprar, equipar e aprimorar armaduras e armas.
   - **Masmorras / Áreas de Exploração Randômicas:** acessadas a partir da área central, com geração procedural, inimigos, itens aleatórios (loot) e atmosferas variadas — reservando o visual mais sombrio e escuro para masmorras específicas.
 
-## O que já está funcionando (v0.1 — Pré-Alfa)
+## O que já está funcionando (v0.2 — Pré-Alfa)
 
 - [x] Estrutura base com **Vite + TypeScript + Three.js**.
 - [x] Câmera isométrica próxima com follow suave e controle de zoom (`Scroll`).
 - [x] Movimentação `WASD` (e setas) em 8 direções normalizadas relativas à tela + sprint (`Shift`).
 - [x] Personagem 3D inicial com rotação suave, anel de base e animação procedural de parada/caminhada/corrida.
-- [x] Mapa inicial da área central (*Santuário Cinzento*) com texturas procedurais, pilares, muretas, braseiros, partículas e entrada visual das Catacumbas.
-- [x] Sistema de colisão com deslizamento suave (*wall-sliding*) contra obstáculos e limites do mapa.
-- [x] HUD minimalista com indicador direcional `WASD` e alerta de proximidade da entrada da masmorra.
+- [x] **Home — Salão Circular Real (*Salão Real da Alvorada*):** piso de cerâmica branca desenhada (azul-real e dourado), paredes curvas com balaustrada frontal baixa, janelões de vitral com feixes diagonais de luz do sol, poeira dourada e 3 portas monumentais estilizadas (Portal das Masmorras, Forja e Loja Real), além de bigorna e baú preparados.
+- [x] Sistema de colisão circular e com deslizamento suave (*wall-sliding*) contra obstáculos e limites do salão.
+- [x] HUD claro com indicador direcional `WASD` e alerta contextual ao se aproximar das portas e estações da Home.
 
 ## Como Rodar Localmente
 
@@ -57,10 +57,10 @@ src/
 
 ## Próximos Passos (Roadmap)
 
-### 1. Refinamento Visual e Iluminação (Prioridade Imediata)
-- [ ] **Redesign do Personagem (Estética estilo LoL):** substituir a geometria "quadradona"/blocada atual por um modelo estilizado mais orgânico e detalhado (proporções estilizadas, silhueta marcante, armadura/arma mais refinadas — seja via geometria estilizada avançada ou modelos 3D `.glb` animados).
-- [ ] **Clarear e Revitalizar a Área Central (Hub):** aumentar a luminosidade e a legibilidade geral do pátio central, saindo do clima excessivamente escuro atual para uma atmosfera de fantasia mais clara e convidativa.
-- [ ] **Contraste de Atmosfera por Bioma:** manter a área central mais clara e reservar iluminação pesada/escura apenas para masmorras e catacumbas específicas.
+### 1. Refinamento Visual e Personagem (Prioridade Imediata)
+- [x] **Clarear e Revitalizar a Área Central (Home):** Salão Circular Real claro com cerâmica branca desenhada, janelões de vidro e luz solar lateral.
+- [ ] **Redesign do Personagem (Estética estilo LoL / Cyberpunk 2077):** substituir a geometria "quadradona"/blocada atual por um modelo estilizado mais orgânico e detalhado.
+- [ ] **Contraste de Atmosfera por Bioma:** manter a Home clara e reservar iluminação mais sombria apenas para masmorras e catacumbas específicas.
 
 ### 2. Expansão da Área Central (Hub)
 - [ ] **NPCs e Bancadas no Hub:** adicionar espaços dedicados na praça central para comércio e progressão (ferreiro/forja, mercador de armaduras e armas, baú de armazenamento).

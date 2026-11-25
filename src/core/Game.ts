@@ -16,6 +16,7 @@ export class Game {
   private readonly analogKnob: HTMLElement | null;
   private readonly moveStateEl: HTMLElement | null;
   private readonly dungeonPromptEl: HTMLElement | null;
+  private readonly dungeonPromptTextEl: HTMLElement | null;
 
   private readonly moveWorldVec = new THREE.Vector3();
   private lastTime = performance.now();
@@ -33,11 +34,11 @@ export class Game {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.05;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#080a10');
-    this.scene.fog = new THREE.FogExp2('#080a10', 0.022);
+    this.scene.background = new THREE.Color('#cde0f5');
+    this.scene.fog = new THREE.FogExp2('#d7e6f5', 0.0045);
 
     this.isoCamera = new IsometricCamera(
       window.innerWidth / Math.max(1, window.innerHeight),
@@ -59,6 +60,7 @@ export class Game {
     this.analogKnob = document.getElementById('analog-knob');
     this.moveStateEl = document.getElementById('move-state');
     this.dungeonPromptEl = document.getElementById('dungeon-prompt');
+    this.dungeonPromptTextEl = document.getElementById('dungeon-prompt-text');
 
     window.addEventListener('resize', this.onResize);
   }
@@ -89,7 +91,7 @@ export class Game {
 
     this.player.update(this.moveWorldVec, moveInput.sprint, dt, this.elapsed);
 
-    // Resolve colisões no plano XZ com wall-sliding
+    // Resolve colisões no plano XZ com limite circular e deslizamento suave
     const pos = {
       x: this.player.group.position.x,
       z: this.player.group.position.z,
@@ -99,7 +101,7 @@ export class Game {
       this.player.radius,
       this.hubMap.circleColliders,
       this.hubMap.boxColliders,
-      this.hubMap.boundsLimit,
+      this.hubMap.boundsRadius,
     );
     this.player.group.position.x = pos.x;
     this.player.group.position.z = pos.z;
@@ -136,8 +138,13 @@ export class Game {
     }
 
     if (this.dungeonPromptEl) {
-      const near = this.hubMap.isNearDungeonEntrance(this.player.group.position);
-      this.dungeonPromptEl.classList.toggle('visible', near);
+      const promptText = this.hubMap.getNearbyInteractionPrompt(
+        this.player.group.position,
+      );
+      if (promptText && this.dungeonPromptTextEl) {
+        this.dungeonPromptTextEl.textContent = promptText;
+      }
+      this.dungeonPromptEl.classList.toggle('visible', promptText !== null);
     }
   }
 
