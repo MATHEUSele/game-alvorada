@@ -68,7 +68,7 @@ src/
 - [ ] **Contraste de Atmosfera por Bioma:** manter a Home clara e reservar iluminação mais sombria apenas para masmorras e catacumbas específicas.
 
 ### 2. Modelo 3D Real do Personagem — Prioridade Atual (Blender via MCP + Mixamo)
-- [ ] **Integração Blender + MCP:** instalar o Blender localmente e conectar ao agente via `BlenderMCP` para criação e edição direta de modelos 3D (fluxo 100% gratuito).
+- [x] **Integração Blender + MCP:** Blender 5.3.0 conectado localmente ao agente via `mcp-for-blender` (`localhost:9876`) para criação e edição direta de modelos 3D (fluxo 100% gratuito).
 - [ ] **Protagonista `.glb` estilo *Sett (LoL)*:** criar/customizar malha humana estilizada com proporções heroicas, textura *hand-painted* e esqueleto humanoide com animações reais (Mixamo) integradas via `GLTFLoader` + `AnimationMixer`.
 - [ ] **Sockets nos ossos reais:** preparar encaixes no esqueleto para acoplar armas, armaduras e capas da Forja/Loja.
 

@@ -61,7 +61,7 @@ Este arquivo é o painel central de orientação do projeto. Conforme cada taref
 
 > Evoluir o protagonista do protótipo procedural para um **modelo 3D real (`.glb`)** com esqueleto e animações fluidas, buscando máxima fidelidade à estética e proporções heroicas do **Sett (*League of Legends*)** em fluxo **100% gratuito**.
 
-- [ ] **Instalar Blender e conectar via Blender MCP:** configurar o Blender localmente e integrar o servidor `BlenderMCP` ao Antigravity para criar, ajustar e exportar modelos 3D diretamente da conversa.
+- [x] **Instalar Blender e conectar via Blender MCP:** Blender 5.3.0 configurado localmente com o addon `MCP for Blender` v2.0 integrado ao Antigravity (`mcp-for-blender` ativo em `localhost:9876`) para criar, ajustar e exportar modelos 3D diretamente da conversa.
 - [ ] **Criar base estilizada do protagonista no Blender:** partir de um base mesh humano gratuito (ex: MPFB2 / base estilizado CC0) e ajustar proporções heroicas estilo *Sett* (ombros largos em V, tronco atlético, mãos/botas marcantes, cabelo volumoso) + roupa inicial e texturas *hand-painted* estilo *LoL*.
 - [ ] **Rigging e Animações reais (Mixamo → `.glb` único):** aplicar esqueleto humanoide padrão e consolidar animações (idle de lutador, caminhada, corrida e base para esquiva/ataque) em um `.glb` leve para rodar a 60fps no PC e no celular.
 - [ ] **Integrar modelo `.glb` no jogo (`GLTFLoader` + `AnimationMixer`):** substituir a malha procedural em `Player.ts` mantendo resposta ágil de controle e sockets presos aos ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`) para futuras armaduras e armas.
