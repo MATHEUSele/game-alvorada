@@ -1,0 +1,243 @@
+:root {
+  color-scheme: dark;
+  --bg: #07080c;
+  --panel-bg: rgba(12, 14, 20, 0.72);
+  --panel-border: rgba(182, 147, 92, 0.34);
+  --gold: #d6b16e;
+  --gold-soft: rgba(214, 177, 110, 0.65);
+  --text: #e7e2d8;
+  --muted: #9b9589;
+  --arcane: #7aa7ff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: "Cinzel", "Georgia", "Times New Roman", serif;
+  color: var(--text);
+  user-select: none;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(7, 8, 12, 0) 54%,
+    rgba(5, 6, 10, 0.42) 82%,
+    rgba(4, 4, 8, 0.78) 100%
+  );
+}
+
+.hud-top-left {
+  position: fixed;
+  top: 20px;
+  left: 22px;
+  pointer-events: none;
+  padding: 11px 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.48);
+}
+
+.area-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.area-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.badge {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(214, 177, 110, 0.16);
+  border: 1px solid var(--gold-soft);
+  color: var(--gold);
+}
+
+.area-subtitle {
+  margin-top: 4px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.hud-bottom-left {
+  position: fixed;
+  bottom: 20px;
+  left: 22px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analog-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  padding: 10px 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+}
+
+.analog-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(214, 177, 110, 0.45);
+  background: radial-gradient(circle, rgba(214, 177, 110, 0.1) 0%, rgba(10, 12, 18, 0.7) 75%);
+}
+
+.analog-crosshair-h,
+.analog-crosshair-v {
+  position: absolute;
+  background: rgba(214, 177, 110, 0.18);
+}
+
+.analog-crosshair-h {
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 1px;
+}
+
+.analog-crosshair-v {
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 1px;
+}
+
+.analog-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f5d89e, #b9893d);
+  box-shadow: 0 0 10px rgba(214, 177, 110, 0.7);
+  transform: translate(-50%, -50%);
+  transition: box-shadow 0.12s ease;
+}
+
+.analog-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.analog-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.analog-state {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 72px;
+}
+
+.controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 8px 13px;
+  background: var(--panel-bg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  backdrop-filter: blur(6px);
+}
+
+.controls-bar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  background: rgba(25, 28, 38, 0.9);
+  border: 1px solid rgba(214, 177, 110, 0.38);
+  border-radius: 4px;
+}
+
+.dungeon-prompt {
+  position: fixed;
+  bottom: 34px;
+  left: 50%;
+  transform: translate(-50%, 10px);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(11, 15, 26, 0.86);
+  border: 1px solid rgba(122, 167, 255, 0.52);
+  border-radius: 6px;
+  box-shadow: 0 0 24px rgba(84, 130, 235, 0.28);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: #dce7ff;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.dungeon-prompt.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.prompt-icon {
+  color: var(--arcane);
+  font-size: 14px;
+}
