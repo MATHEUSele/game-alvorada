@@ -20,6 +20,7 @@ Protótipo de um **Action RPG (ARPG)** isométrico 3D rodando direto no navegado
 - [x] **Home — Salão Circular Real (*Salão Real da Alvorada*):** piso de cerâmica branca desenhada (azul-real e dourado), paredes curvas com balaustrada frontal baixa, janelões de vitral com feixes diagonais de luz do sol, poeira dourada e 3 portas monumentais estilizadas (Portal das Masmorras, Forja e Loja Real), além de bigorna e baú preparados.
 - [x] Sistema de colisão circular e com deslizamento suave (*wall-sliding*) contra obstáculos e limites do salão.
 - [x] HUD claro com indicador direcional `WASD` e alerta contextual ao se aproximar das portas e estações da Home.
+- [x] **Modo PC + Celular (via QR Code):** servidor local gera QR Code automático no terminal e no botão `Jogar no Celular` para abrir direto no smartphone com **analógico 360°** e **botão de correr** multi-touch.
 
 ## Como Rodar Localmente
 
@@ -27,14 +28,16 @@ Protótipo de um **Action RPG (ARPG)** isométrico 3D rodando direto no navegado
 # Instalar dependências
 npm install
 
-# Rodar em modo desenvolvimento
+# Rodar em modo desenvolvimento (PC + rede local para celular)
 npm run dev
 
 # Verificar tipos e gerar build de produção
 npm run build
 ```
 
-Depois de iniciar com `npm run dev`, abra `http://localhost:5173/` no navegador.
+Depois de iniciar com `npm run dev`:
+- **No PC:** abra `http://localhost:5173/` no navegador (`WASD` + `Shift` + `Scroll`).
+- **No Celular:** clique em **`Jogar no Celular`** no canto superior direito (ou escaneie o QR Code exibido no terminal) estando no mesmo Wi-Fi para entrar direto no jogo com analógico 360° e botão de correr.
 
 ## Estrutura de Pastas
 

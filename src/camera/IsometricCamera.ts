@@ -62,7 +62,8 @@ export class IsometricCamera {
     inputY: number,
     outVec3: THREE.Vector3,
   ): THREE.Vector3 {
-    if (inputX === 0 && inputY === 0) {
+    const mag = Math.min(1, Math.hypot(inputX, inputY));
+    if (mag <= 1e-6) {
       return outVec3.set(0, 0, 0);
     }
 
@@ -78,7 +79,7 @@ export class IsometricCamera {
       .addScaledVector(this.forwardXZ, inputY);
 
     if (outVec3.lengthSq() > 1e-6) {
-      outVec3.normalize();
+      outVec3.normalize().multiplyScalar(mag);
     }
 
     return outVec3;

@@ -4,6 +4,7 @@ import { Player } from '../entities/Player';
 import { resolveCollisions } from '../world/Collision';
 import { HubMap } from '../world/HubMap';
 import { Input } from './Input';
+import { initMobileUi } from './MobileUi';
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
@@ -12,6 +13,7 @@ export class Game {
   private readonly input: Input;
   private readonly hubMap: HubMap;
   private readonly player: Player;
+  private readonly cleanupMobileUi: () => void;
 
   private readonly analogKnob: HTMLElement | null;
   private readonly moveStateEl: HTMLElement | null;
@@ -29,7 +31,13 @@ export class Game {
       antialias: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const isTouchDevice =
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches;
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, isTouchDevice ? 1.5 : 2),
+    );
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -61,6 +69,7 @@ export class Game {
     this.moveStateEl = document.getElementById('move-state');
     this.dungeonPromptEl = document.getElementById('dungeon-prompt');
     this.dungeonPromptTextEl = document.getElementById('dungeon-prompt-text');
+    this.cleanupMobileUi = initMobileUi();
 
     window.addEventListener('resize', this.onResize);
   }
@@ -151,6 +160,7 @@ export class Game {
   public dispose(): void {
     cancelAnimationFrame(this.rafId);
     window.removeEventListener('resize', this.onResize);
+    this.cleanupMobileUi();
     this.input.dispose(window);
     this.renderer.dispose();
   }

@@ -12,6 +12,11 @@ Este arquivo é o painel central de orientação do projeto. Conforme cada taref
 - [x] Colisão com deslizamento suave (*wall-sliding*)
 - [x] Primeiro mapa jogável de teste + commit inicial organizado
 
+- [x] **Suporte PC + Celular (Multiplataforma no mesmo servidor):**
+  - [x] Geração automática de **QR Code** no terminal e na tela do PC (`Jogar no Celular`) apontando direto para o servidor local.
+  - [x] **Analógico virtual 360°** proporcional no canto inferior esquerdo + **Botão de Correr** multi-touch no canto inferior direito.
+  - [x] Botão de **Tela Cheia** e adaptação automática da interface para dispositivos touch.
+
 ---
 
 ## Fase 1 — Configurar a Home (Área Central / Hub)
