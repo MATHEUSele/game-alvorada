@@ -1,0 +1,9 @@
+{
+  "name": "Salão Real da Alvorada — ARPG",
+  "short_name": "Salão Real",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#cde0f5",
+  "theme_color": "#121e36"
+}

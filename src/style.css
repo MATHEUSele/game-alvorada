@@ -22,6 +22,7 @@ body,
 #game-canvas {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg);
   font-family: "Cinzel", "Georgia", "Times New Roman", serif;

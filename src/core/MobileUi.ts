@@ -91,15 +91,33 @@ export function initMobileUi(): () => void {
     }
   };
 
+  const isStandalone =
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+  const isIos =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
   const onFullscreenClick = (): void => {
-    if (!document.fullscreenElement) {
-      void document.documentElement.requestFullscreen?.().catch(() => {});
-    } else {
-      void document.exitFullscreen?.().catch(() => {});
+    if (document.fullscreenEnabled) {
+      if (!document.fullscreenElement) {
+        void document.documentElement.requestFullscreen?.().catch(() => {});
+      } else {
+        void document.exitFullscreen?.().catch(() => {});
+      }
+      return;
+    }
+
+    if (isIos) {
+      window.alert(
+        'Para Tela Cheia no iPhone:\n1. Toque no botão Compartilhar (quadrado com seta ↑)\n2. Toque em "Adicionar à Tela de Início"\n3. Abra o jogo pelo ícone criado — ele abrirá em 100% tela cheia!',
+      );
     }
   };
 
-  if (fullscreenBtn && !document.fullscreenEnabled) {
+  if (fullscreenBtn && (isStandalone || (!document.fullscreenEnabled && !isIos))) {
     fullscreenBtn.style.display = 'none';
   }
 
