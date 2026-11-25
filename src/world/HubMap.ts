@@ -53,6 +53,11 @@ export class HubMap {
   private dustSeeds!: Float32Array;
   private readonly dustCount = 220;
 
+  private petalPoints!: THREE.Points;
+  private petalPositions!: Float32Array;
+  private petalSeeds!: Float32Array;
+  private readonly petalCount = 130;
+
   constructor(maxAnisotropy: number) {
     const doorAngles = [0, -66 * DEG2RAD, 66 * DEG2RAD];
     const textures = createHallTextures(
@@ -147,14 +152,13 @@ export class HubMap {
     plinthRing.receiveShadow = true;
     this.group.add(plinthRing);
 
-    // Plano distante suave abaixo da cidadela (nuvens/névoa clara distante)
-    const skySea = new THREE.Mesh(
-      new THREE.CircleGeometry(110, 48),
-      new THREE.MeshBasicMaterial({ color: '#d7e6f5' }),
+    // Jardim Real externo ao redor do Salão (visível além da balaustrada e pelos janelões)
+    this.buildExteriorRoyalGarden(
+      textures.gardenGrassMap,
+      marbleMat,
+      creamTrimMat,
+      goldMat,
     );
-    skySea.rotation.x = -Math.PI / 2;
-    skySea.position.y = -8;
-    this.group.add(skySea);
 
     // Paredes curvas traseiras/laterais com vãos abertos para os 4 janelões de vidro
     const windowAngles = [
@@ -1101,6 +1105,353 @@ export class HubMap {
     this.group.add(this.dustPoints);
   }
 
+  private buildExteriorRoyalGarden(
+    gardenGrassMap: THREE.CanvasTexture,
+    marbleMat: THREE.Material,
+    creamTrimMat: THREE.Material,
+    goldMat: THREE.Material,
+  ): void {
+    const gardenY = -1.65;
+    const gardenGroup = new THREE.Group();
+
+    // Gramado circular amplo ao redor da cidadela
+    const grass = new THREE.Mesh(
+      new THREE.CircleGeometry(98, 72),
+      new THREE.MeshStandardMaterial({
+        map: gardenGrassMap,
+        roughness: 0.92,
+        metalness: 0.02,
+      }),
+    );
+    grass.rotation.x = -Math.PI / 2;
+    grass.position.y = gardenY;
+    grass.receiveShadow = true;
+    gardenGroup.add(grass);
+
+    // Espelho d'água cristalino contornando a base do Salão
+    const moatWater = new THREE.Mesh(
+      new THREE.RingGeometry(18.6, 22.9, 72),
+      new THREE.MeshStandardMaterial({
+        color: '#5ec0ee',
+        roughness: 0.14,
+        metalness: 0.24,
+        transparent: true,
+        opacity: 0.88,
+      }),
+    );
+    moatWater.rotation.x = -Math.PI / 2;
+    moatWater.position.y = gardenY + 0.06;
+    moatWater.receiveShadow = true;
+    gardenGroup.add(moatWater);
+
+    // Mureta externa de mármore do espelho d'água
+    const moatRim = new THREE.Mesh(
+      new THREE.RingGeometry(22.8, 23.6, 72),
+      creamTrimMat,
+    );
+    moatRim.rotation.x = -Math.PI / 2;
+    moatRim.position.y = gardenY + 0.09;
+    moatRim.receiveShadow = true;
+    gardenGroup.add(moatRim);
+
+    // Duas pontes ornamentais laterais sobre o espelho d'água
+    for (const bridgeDeg of [135, 225]) {
+      const bPos = hallPolar(bridgeDeg * DEG2RAD, 20.8);
+      const bridge = new THREE.Group();
+      bridge.position.set(bPos.x, gardenY + 0.24, bPos.z);
+      bridge.rotation.y = bPos.inwardYaw;
+
+      const deck = new THREE.Mesh(
+        new THREE.BoxGeometry(2.6, 0.28, 4.9),
+        marbleMat,
+      );
+      deck.castShadow = true;
+      deck.receiveShadow = true;
+      bridge.add(deck);
+
+      for (const side of [-1.18, 1.18]) {
+        const rail = new THREE.Mesh(
+          new THREE.BoxGeometry(0.18, 0.45, 4.8),
+          creamTrimMat,
+        );
+        rail.position.set(side, 0.32, 0);
+        bridge.add(rail);
+      }
+      gardenGroup.add(bridge);
+    }
+
+    // Materiais orgânicos do jardim (cores vivas e claras)
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: '#6b4c35',
+      roughness: 0.9,
+    });
+    const leafGreenMat = new THREE.MeshStandardMaterial({
+      color: '#4e9b44',
+      roughness: 0.78,
+    });
+    const leafBrightMat = new THREE.MeshStandardMaterial({
+      color: '#6ec056',
+      roughness: 0.76,
+    });
+    const blossomPinkMat = new THREE.MeshStandardMaterial({
+      color: '#f8dce6',
+      roughness: 0.72,
+    });
+    const blossomGoldMat = new THREE.MeshStandardMaterial({
+      color: '#ffe69e',
+      roughness: 0.7,
+    });
+    const hedgeMat = new THREE.MeshStandardMaterial({
+      color: '#3c8036',
+      roughness: 0.85,
+    });
+    const flowerPalette = ['#fff8e6', '#ffbfd4', '#8cc8ff', '#ffe07d'];
+
+    const addTree = (
+      alphaDeg: number,
+      radius: number,
+      scale: number,
+      variant: 'green' | 'pink' | 'gold',
+    ): void => {
+      const p = hallPolar(alphaDeg * DEG2RAD, radius);
+      const tree = new THREE.Group();
+      tree.position.set(p.x, gardenY, p.z);
+      tree.scale.setScalar(scale);
+
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.24, 0.4, 2.7, 8),
+        trunkMat,
+      );
+      trunk.position.y = 1.35;
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      tree.add(trunk);
+
+      const canopyMat =
+        variant === 'pink'
+          ? blossomPinkMat
+          : variant === 'gold'
+            ? blossomGoldMat
+            : leafGreenMat;
+      const topMat = variant === 'green' ? leafBrightMat : canopyMat;
+
+      const lobes: Array<[number, number, number, number, THREE.Material]> = [
+        [0, 3.4, 0, 1.55, canopyMat],
+        [-0.95, 2.9, 0.45, 1.15, canopyMat],
+        [0.95, 3.0, -0.4, 1.2, topMat],
+        [0.15, 4.25, 0.15, 1.15, topMat],
+      ];
+      for (const [lx, ly, lz, lr, mat] of lobes) {
+        const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(lr, 1), mat);
+        crown.position.set(lx, ly, lz);
+        crown.castShadow = true;
+        crown.receiveShadow = true;
+        tree.add(crown);
+      }
+
+      gardenGroup.add(tree);
+    };
+
+    const addFlowerBed = (alphaDeg: number, radius: number, rotY = 0): void => {
+      const p = hallPolar(alphaDeg * DEG2RAD, radius);
+      const bed = new THREE.Group();
+      bed.position.set(p.x, gardenY, p.z);
+      bed.rotation.y = rotY;
+
+      const rim = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.45, 1.55, 0.34, 14),
+        creamTrimMat,
+      );
+      rim.position.y = 0.17;
+      rim.receiveShadow = true;
+      bed.add(rim);
+
+      const bush = new THREE.Mesh(
+        new THREE.SphereGeometry(1.18, 12, 8),
+        hedgeMat,
+      );
+      bush.scale.set(1.1, 0.46, 1.1);
+      bush.position.y = 0.35;
+      bush.castShadow = true;
+      bush.receiveShadow = true;
+      bed.add(bush);
+
+      for (let i = 0; i < 6; i++) {
+        const ang = (i / 6) * Math.PI * 2;
+        const flower = new THREE.Mesh(
+          new THREE.SphereGeometry(0.18, 8, 6),
+          new THREE.MeshStandardMaterial({
+            color: flowerPalette[i % flowerPalette.length],
+            roughness: 0.65,
+          }),
+        );
+        flower.position.set(
+          Math.cos(ang) * 0.72,
+          0.62 + (i % 2) * 0.08,
+          Math.sin(ang) * 0.72,
+        );
+        bed.add(flower);
+      }
+
+      gardenGroup.add(bed);
+    };
+
+    // 1) Faixa frontal visível além da balaustrada: apenas canteiros e fontes baixas
+    //    (altura <= 1.7m para nunca bloquear a câmera isométrica!)
+    for (const deg of [148, 164, 180, 196, 212]) {
+      addFlowerBed(deg, 25.4);
+    }
+    for (const deg of [156, 172, 188, 204]) {
+      addFlowerBed(deg, 32.0);
+    }
+
+    // Duas fontes baixas elegantes nos lados da vista frontal
+    for (const fDeg of [152, 208]) {
+      const fp = hallPolar(fDeg * DEG2RAD, 28.6);
+      const fountain = new THREE.Group();
+      fountain.position.set(fp.x, gardenY, fp.z);
+
+      const basin = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.75, 1.95, 0.46, 18),
+        marbleMat,
+      );
+      basin.position.y = 0.23;
+      basin.receiveShadow = true;
+      fountain.add(basin);
+
+      const waterPool = new THREE.Mesh(
+        new THREE.CircleGeometry(1.52, 18),
+        new THREE.MeshStandardMaterial({
+          color: '#6ecbf2',
+          roughness: 0.15,
+          metalness: 0.2,
+        }),
+      );
+      waterPool.rotation.x = -Math.PI / 2;
+      waterPool.position.y = 0.47;
+      fountain.add(waterPool);
+
+      const spout = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.34, 1.05, 10),
+        goldMat,
+      );
+      spout.position.y = 0.72;
+      fountain.add(spout);
+
+      gardenGroup.add(fountain);
+    }
+
+    // 2) Árvores visíveis atrás dos 4 janelões altos (-112°..+112°) e laterais da balaustrada
+    const treeSpecs: Array<[number, number, number, 'green' | 'pink' | 'gold']> = [
+      // Atrás dos janelões principais
+      [-104, 25.5, 1.45, 'pink'],
+      [-88, 29.0, 1.65, 'green'],
+      [-40, 26.2, 1.55, 'green'],
+      [-26, 28.5, 1.5, 'gold'],
+      [26, 26.2, 1.6, 'pink'],
+      [42, 29.2, 1.7, 'green'],
+      [88, 25.8, 1.5, 'green'],
+      [104, 28.5, 1.6, 'gold'],
+      // Emoldurando esquerda e direita da balaustrada frontal (fora do corredor central 148°..212°)
+      [122, 25.6, 1.4, 'pink'],
+      [136, 28.8, 1.55, 'green'],
+      [142, 34.5, 1.7, 'gold'],
+      [238, 25.6, 1.4, 'green'],
+      [224, 28.8, 1.55, 'pink'],
+      [218, 34.5, 1.7, 'green'],
+      // Anel mais distante de bosque
+      [-120, 39, 1.9, 'green'],
+      [-65, 38, 1.85, 'pink'],
+      [-10, 41, 2.0, 'green'],
+      [55, 39, 1.9, 'gold'],
+      [115, 40, 1.95, 'green'],
+      [165, 44, 1.6, 'pink'],
+      [195, 44, 1.6, 'green'],
+    ];
+    for (const [deg, rad, sc, variant] of treeSpecs) {
+      addTree(deg, rad, sc, variant);
+    }
+
+    // 3) Colinas suaves e torres distantes da capital ao longe
+    const hillMat = new THREE.MeshStandardMaterial({
+      color: '#7ab96a',
+      roughness: 0.95,
+    });
+    for (let i = 0; i < 12; i++) {
+      const deg = -165 + i * 30;
+      const hp = hallPolar(deg * DEG2RAD, 74 + (i % 3) * 8);
+      const hill = new THREE.Mesh(
+        new THREE.SphereGeometry(16 + (i % 4) * 4, 16, 10),
+        hillMat,
+      );
+      hill.scale.set(1.5, 0.35, 1.2);
+      hill.position.set(hp.x, gardenY - 0.8, hp.z);
+      gardenGroup.add(hill);
+    }
+
+    for (const [tDeg, tRad, tH] of [
+      [-48, 66, 22],
+      [18, 70, 26],
+      [108, 66, 20],
+    ]) {
+      const tp = hallPolar(tDeg * DEG2RAD, tRad);
+      const tower = new THREE.Group();
+      tower.position.set(tp.x, gardenY, tp.z);
+
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.3, 2.9, tH, 12),
+        marbleMat,
+      );
+      body.position.y = tH / 2;
+      tower.add(body);
+
+      const roof = new THREE.Mesh(
+        new THREE.ConeGeometry(2.7, 6.2, 12),
+        new THREE.MeshStandardMaterial({ color: '#2b55a3', roughness: 0.55 }),
+      );
+      roof.position.y = tH + 3.1;
+      tower.add(roof);
+
+      const spire = new THREE.Mesh(new THREE.ConeGeometry(0.32, 2.2, 8), goldMat);
+      spire.position.y = tH + 6.9;
+      tower.add(spire);
+
+      gardenGroup.add(tower);
+    }
+
+    // 4) Pétalas suaves flutuando na brisa ao redor do jardim e balaustrada
+    const pGeo = new THREE.BufferGeometry();
+    this.petalPositions = new Float32Array(this.petalCount * 3);
+    this.petalSeeds = new Float32Array(this.petalCount);
+
+    for (let i = 0; i < this.petalCount; i++) {
+      const r = 19.5 + Math.random() * 19;
+      const theta = Math.random() * Math.PI * 2;
+      this.petalPositions[i * 3 + 0] = Math.cos(theta) * r;
+      this.petalPositions[i * 3 + 1] = gardenY + 0.6 + Math.random() * 6.5;
+      this.petalPositions[i * 3 + 2] = Math.sin(theta) * r;
+      this.petalSeeds[i] = Math.random() * Math.PI * 2;
+    }
+
+    pGeo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(this.petalPositions, 3),
+    );
+    this.petalPoints = new THREE.Points(
+      pGeo,
+      new THREE.PointsMaterial({
+        color: '#fff1f5',
+        size: 0.14,
+        transparent: true,
+        opacity: 0.78,
+        depthWrite: false,
+      }),
+    );
+    gardenGroup.add(this.petalPoints);
+
+    this.group.add(gardenGroup);
+  }
+
   public getNearbyInteractionPrompt(pos: THREE.Vector3): string | null {
     for (let i = 0; i < this.interactionZones.length; i++) {
       const zone = this.interactionZones[i];
@@ -1149,5 +1500,22 @@ export class HubMap {
       }
     }
     posAttr.needsUpdate = true;
+
+    // Pétalas suaves flutuando na brisa do jardim externo
+    const petalAttr = this.petalPoints.geometry.getAttribute(
+      'position',
+    ) as THREE.BufferAttribute;
+    for (let i = 0; i < this.petalCount; i++) {
+      const idx = i * 3;
+      const seed = this.petalSeeds[i];
+      this.petalPositions[idx + 1] -= dt * (0.24 + (i % 3) * 0.05);
+      this.petalPositions[idx + 0] += Math.sin(elapsed * 0.9 + seed) * dt * 0.32;
+      this.petalPositions[idx + 2] += Math.cos(elapsed * 0.75 + seed) * dt * 0.28;
+
+      if (this.petalPositions[idx + 1] < -1.1) {
+        this.petalPositions[idx + 1] = 5.4;
+      }
+    }
+    petalAttr.needsUpdate = true;
   }
 }

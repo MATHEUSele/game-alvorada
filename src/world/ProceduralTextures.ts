@@ -17,6 +17,7 @@ export interface HallTextureSet {
   marbleWallMap: THREE.CanvasTexture;
   stainedGlassMap: THREE.CanvasTexture;
   sunbeamGradientMap: THREE.CanvasTexture;
+  gardenGrassMap: THREE.CanvasTexture;
 }
 
 export function createHallTextures(
@@ -29,6 +30,7 @@ export function createHallTextures(
   const marbleWallMap = createMarbleWallTexture(maxAnisotropy);
   const stainedGlassMap = createStainedGlassTexture(maxAnisotropy);
   const sunbeamGradientMap = createSunbeamGradientTexture();
+  const gardenGrassMap = createGardenGrassTexture(maxAnisotropy);
 
   return {
     ceramicFloorMap,
@@ -36,6 +38,7 @@ export function createHallTextures(
     marbleWallMap,
     stainedGlassMap,
     sunbeamGradientMap,
+    gardenGrassMap,
   };
 }
 
@@ -483,5 +486,84 @@ function createSunbeamGradientTexture(): THREE.CanvasTexture {
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createGardenGrassTexture(maxAnisotropy: number): THREE.CanvasTexture {
+  const size = 1024;
+  const half = size / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const rng = mulberry32(5589);
+
+  // Base de gramado ensolarado claro
+  const baseGrad = ctx.createRadialGradient(half, half, 90, half, half, half);
+  baseGrad.addColorStop(0, '#69b153');
+  baseGrad.addColorStop(0.5, '#5ca348');
+  baseGrad.addColorStop(1, '#4c8e3d');
+  ctx.fillStyle = baseGrad;
+  ctx.fillRect(0, 0, size, size);
+
+  // Manchas suaves de luz e variação orgânica da grama
+  for (let i = 0; i < 420; i++) {
+    const px = rng() * size;
+    const py = rng() * size;
+    const r = 16 + rng() * 44;
+    const warm = rng() > 0.45;
+    const grad = ctx.createRadialGradient(px, py, 2, px, py, r);
+    grad.addColorStop(
+      0,
+      warm ? 'rgba(138, 204, 96, 0.22)' : 'rgba(54, 114, 48, 0.18)',
+    );
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Caminhos circulares e radiais de pedra clara no jardim (mundo raio ~98m)
+  const gardenWorldRadius = 98;
+  const pathInnerR = (28.5 / gardenWorldRadius) * half;
+  const pathOuterR = (41.0 / gardenWorldRadius) * half;
+
+  ctx.strokeStyle = '#dfd8c7';
+  ctx.lineWidth = 18;
+  ctx.beginPath();
+  ctx.arc(half, half, pathInnerR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#d5ccb8';
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.arc(half, half, pathOuterR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Três passadeiras radiais conectando os anéis do jardim
+  ctx.save();
+  ctx.translate(half, half);
+  for (let i = 0; i < 6; i++) {
+    ctx.rotate(Math.PI / 3);
+    ctx.fillStyle = '#ddd6c5';
+    ctx.fillRect(-7, pathInnerR - 4, 14, pathOuterR - pathInnerR + 8);
+  }
+  ctx.restore();
+
+  // Pontinhos suaves de flores brancas/douradas espalhadas pelo gramado
+  for (let i = 0; i < 950; i++) {
+    const px = rng() * size;
+    const py = rng() * size;
+    const dist = Math.hypot(px - half, py - half);
+    if (dist < (23 / gardenWorldRadius) * half) continue;
+    ctx.fillStyle =
+      rng() > 0.35 ? 'rgba(255, 248, 224, 0.65)' : 'rgba(255, 215, 115, 0.65)';
+    ctx.fillRect(px, py, 2.2, 2.2);
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = maxAnisotropy;
   return tex;
 }

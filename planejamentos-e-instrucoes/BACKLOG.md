@@ -41,19 +41,30 @@ Este arquivo é o painel central de orientação do projeto. Conforme cada taref
   - [x] Feedback discreto no HUD ao se aproximar de cada porta.
 - [x] **Preparar espaços funcionais futuros na Home:**
   - [x] Áreas definidas para NPCs (ferreiro, mercador) e baú de armazenamento.
-- [ ] **Enriquecer o background / vista externa ao redor do Salão:**
-  - [ ] Melhorar o horizonte e o cenário do lado de fora da balaustrada e dos janelões (céu detalhado, nuvens, montanhas/torres ou vista da capital real ao longe) para dar a impressão de um lugar ainda mais bonito e vivo.
+- [x] **Enriquecer o background / vista externa ao redor do Salão:**
+  - [x] Jardim Real ensolarado ao redor do salão (gramado claro, espelho d'água com pontes, canteiros floridos, fontes baixas, árvores frondosas e floridas, torres da capital ao longe e pétalas flutuando na brisa).
 
 ---
 
 ## Fase 2 — Modelagem e Estética do Personagem
 
-> Evoluir o boneco saindo do visual "quadradão"/blocado para uma estética mais bonita, detalhada e estilizada — tendo como referências de direção visual **League of Legends** (leitura clara em câmera isométrica) e **Cyberpunk 2077** (acabamento, silhueta e presença marcante, adaptado à nossa paleta).
+> Evoluir o boneco saindo do visual "quadradão"/blocado para uma estética humana mais bonita, detalhada e estilizada — combinando o porte atlético e silhueta carismática do **Sett (*League of Legends*)** com roupa inicial simples de sobrevivente/aventureiro estilo ***Last Day on Earth***.
 
-- [ ] **Definir direção visual final do personagem:** proporções, silhueta, estilo de armadura/roupa e paleta de cores (mais visível e destacada do cenário).
-- [ ] **Escolher pipeline 3D do personagem:** integrar modelo `.glb`/`.gltf` com esqueleto (*rig*) e animações (idle, andar, correr) ou construir malha estilizada de maior fidelidade.
-- [ ] **Implementar novo modelo na cena:** substituir o personagem atual mantendo a responsividade do `WASD` e a rotação suave.
-- [ ] **Preparar encaixes visuais (sockets):** deixar pronto para trocar armas e peças de armadura no futuro.
+- [x] **Definir direção visual final do personagem:** humano estilizado atlético com cabelo espetado jogado para trás, faixas de lutador nas mãos/antebraços, colete aberto simples, tira transversal de couro, cinto utilitário e botas.
+- [x] **Construir modelo 3D orgânico e articulado:** substituir geometrias quadradas por formas esculpidas arredondadas com articulação em 2 juntas (ombros, cotovelos, quadris, joelhos, pelve e peitoral).
+- [x] **Implementar novo modelo na cena:** substituir o personagem atual mantendo a responsividade do `WASD`/analógico 360° e animação natural de idle, caminhada e corrida.
+- [x] **Preparar encaixes visuais (sockets):** `head`, `chest`, `back`, `rightHand` e `leftHand` prontos para equipar armas e peças de armadura no futuro.
+
+---
+
+## Fase 2.5 — Modelo 3D Real do Personagem (Blender via MCP + Mixamo) — 🔥 PRIORIDADE ATUAL
+
+> Evoluir o protagonista do protótipo procedural para um **modelo 3D real (`.glb`)** com esqueleto e animações fluidas, buscando máxima fidelidade à estética e proporções heroicas do **Sett (*League of Legends*)** em fluxo **100% gratuito**.
+
+- [ ] **Instalar Blender e conectar via Blender MCP:** configurar o Blender localmente e integrar o servidor `BlenderMCP` ao Antigravity para criar, ajustar e exportar modelos 3D diretamente da conversa.
+- [ ] **Criar base estilizada do protagonista no Blender:** partir de um base mesh humano gratuito (ex: MPFB2 / base estilizado CC0) e ajustar proporções heroicas estilo *Sett* (ombros largos em V, tronco atlético, mãos/botas marcantes, cabelo volumoso) + roupa inicial e texturas *hand-painted* estilo *LoL*.
+- [ ] **Rigging e Animações reais (Mixamo → `.glb` único):** aplicar esqueleto humanoide padrão e consolidar animações (idle de lutador, caminhada, corrida e base para esquiva/ataque) em um `.glb` leve para rodar a 60fps no PC e no celular.
+- [ ] **Integrar modelo `.glb` no jogo (`GLTFLoader` + `AnimationMixer`):** substituir a malha procedural em `Player.ts` mantendo resposta ágil de controle e sockets presos aos ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`) para futuras armaduras e armas.
 
 ---
 
