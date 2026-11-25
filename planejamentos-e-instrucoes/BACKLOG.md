@@ -62,9 +62,9 @@ Este arquivo é o painel central de orientação do projeto. Conforme cada taref
 > Evoluir o protagonista do protótipo procedural para um **modelo 3D real (`.glb`)** com esqueleto e animações fluidas, buscando máxima fidelidade à estética e proporções heroicas do **Sett (*League of Legends*)** em fluxo **100% gratuito**.
 
 - [x] **Instalar Blender e conectar via Blender MCP:** Blender 5.3.0 configurado localmente com o addon `MCP for Blender` v2.0 integrado ao Antigravity (`mcp-for-blender` ativo em `localhost:9876`) para criar, ajustar e exportar modelos 3D diretamente da conversa.
-- [ ] **Criar base estilizada do protagonista no Blender:** partir de um base mesh humano gratuito (ex: MPFB2 / base estilizado CC0) e ajustar proporções heroicas estilo *Sett* (ombros largos em V, tronco atlético, mãos/botas marcantes, cabelo volumoso) + roupa inicial e texturas *hand-painted* estilo *LoL*.
-- [ ] **Rigging e Animações reais (Mixamo → `.glb` único):** aplicar esqueleto humanoide padrão e consolidar animações (idle de lutador, caminhada, corrida e base para esquiva/ataque) em um `.glb` leve para rodar a 60fps no PC e no celular.
-- [ ] **Integrar modelo `.glb` no jogo (`GLTFLoader` + `AnimationMixer`):** substituir a malha procedural em `Player.ts` mantendo resposta ágil de controle e sockets presos aos ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`) para futuras armaduras e armas.
+- [x] **Criar base estilizada do protagonista no Blender:** malha humana estilizada construída no Blender 5.3.0 (`assets-src/protagonist.blend`) com proporções heroicas estilo *Sett* (ombros largos em V, tronco atlético, rosto expressivo com olhos âmbar e cicatriz, mãos articuladas, cabelo volumoso em mechas), roupa inicial detalhada estilo *Last Day on Earth* e texturas *hand-painted* embarcadas.
+- [x] **Rigging e Animações reais (`protagonist.glb`):** esqueleto humanoide de 22 ossos (`Hips`, `Spine`, `Spine1`, `Spine2`, `Neck`, `Head`, braços e pernas) com skinning limpo e 5 animações (`Idle`, `Walk`, `Run`, `AttackCombo`, `Dodge`) exportadas em `public/models/protagonist.glb` (~1.39 MB) para rodar a 60fps no PC e no celular.
+- [x] **Integrar modelo `.glb` no jogo (`GLTFLoader` + `AnimationMixer`):** `Player.ts` atualizado carregando `public/models/protagonist.glb` com blend fluido entre `Idle`, `Walk` e `Run`, suporte a ações de combate/esquiva (`AttackCombo`/`Dodge`) e sockets presos aos ossos reais (`Head`, `Spine2`, `RightHand`, `LeftHand`).
 
 ---
 

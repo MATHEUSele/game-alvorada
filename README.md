@@ -67,10 +67,10 @@ src/
 - [x] **Redesign do Personagem (Estética *Sett* / *Last Day on Earth*):** modelo humano estilizado e articulado com sockets prontos para equipamentos.
 - [ ] **Contraste de Atmosfera por Bioma:** manter a Home clara e reservar iluminação mais sombria apenas para masmorras e catacumbas específicas.
 
-### 2. Modelo 3D Real do Personagem — Prioridade Atual (Blender via MCP + Mixamo)
+### 2. Modelo 3D Real do Personagem (Blender via MCP)
 - [x] **Integração Blender + MCP:** Blender 5.3.0 conectado localmente ao agente via `mcp-for-blender` (`localhost:9876`) para criação e edição direta de modelos 3D (fluxo 100% gratuito).
-- [ ] **Protagonista `.glb` estilo *Sett (LoL)*:** criar/customizar malha humana estilizada com proporções heroicas, textura *hand-painted* e esqueleto humanoide com animações reais (Mixamo) integradas via `GLTFLoader` + `AnimationMixer`.
-- [ ] **Sockets nos ossos reais:** preparar encaixes no esqueleto para acoplar armas, armaduras e capas da Forja/Loja.
+- [x] **Protagonista `.glb` estilo *Sett (LoL)*:** malha humana estilizada com proporções heroicas, roupa inicial detalhada, texturas *hand-painted* e esqueleto humanoide de 22 ossos com 5 animações (`Idle`, `Walk`, `Run`, `AttackCombo`, `Dodge`) em `public/models/protagonist.glb` integrado via `GLTFLoader` + `AnimationMixer`.
+- [x] **Sockets nos ossos reais:** encaixes `head`, `chest`, `back`, `rightHand` e `leftHand` presos aos ossos reais do esqueleto para acoplar armas, armaduras e capas da Forja/Loja.
 
 ### 3. Expansão da Área Central (Hub)
 - [ ] **NPCs e Bancadas no Hub:** adicionar espaços dedicados na praça central para comércio e progressão (ferreiro/forja, mercador de armaduras e armas, baú de armazenamento).
