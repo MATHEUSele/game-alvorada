@@ -11,6 +11,49 @@ export interface BoxCollider {
   maxZ: number;
 }
 
+export type InteractionAction =
+  | 'enter-dungeon'
+  | 'exit-dungeon'
+  | 'next-dungeon-floor';
+
+export interface InteractionPrompt {
+  label: string;
+  action?: InteractionAction;
+  actionLabel?: string;
+}
+
+export interface InteractionZone extends InteractionPrompt {
+  x: number;
+  z: number;
+  radiusSq: number;
+}
+
+export function findNearbyInteraction(
+  zones: readonly InteractionZone[],
+  pos: { x: number; z: number },
+): InteractionPrompt | null {
+  let closest: InteractionZone | null = null;
+  let closestDistSq = Infinity;
+
+  for (let i = 0; i < zones.length; i++) {
+    const zone = zones[i];
+    const dx = pos.x - zone.x;
+    const dz = pos.z - zone.z;
+    const distSq = dx * dx + dz * dz;
+    if (distSq <= zone.radiusSq && distSq < closestDistSq) {
+      closest = zone;
+      closestDistSq = distSq;
+    }
+  }
+
+  if (!closest) return null;
+  return {
+    label: closest.label,
+    action: closest.action,
+    actionLabel: closest.actionLabel,
+  };
+}
+
 export function resolveCollisions(
   pos: { x: number; z: number },
   playerRadius: number,

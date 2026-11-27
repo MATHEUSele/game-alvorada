@@ -1,8 +1,16 @@
 import * as THREE from 'three';
 import { IsometricCamera } from '../camera/IsometricCamera';
 import { Player, type SwordSkillSlot } from '../entities/Player';
-import { resolveCollisions } from '../world/Collision';
+import {
+  resolveCollisions,
+  type InteractionPrompt,
+} from '../world/Collision';
+import { DungeonMap } from '../world/DungeonMap';
 import { HubMap } from '../world/HubMap';
+import {
+  createDungeonTextures,
+  type DungeonTextureSet,
+} from '../world/ProceduralTextures';
 import { Input } from './Input';
 import { initMobileUi } from './MobileUi';
 
@@ -16,16 +24,38 @@ interface SkillButtonRefs {
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene: THREE.Scene;
+  private readonly sceneFog: THREE.FogExp2;
   private readonly isoCamera: IsometricCamera;
   private readonly input: Input;
   private readonly hubMap: HubMap;
   private readonly player: Player;
   private readonly cleanupMobileUi: () => void;
+  private readonly maxAnisotropy: number;
+
+  private readonly hubBgColor = new THREE.Color('#cde0f5');
+  private readonly hubFogColor = new THREE.Color('#d7e6f5');
+  private readonly dungeonBgColor = new THREE.Color('#090d18');
+  private readonly dungeonFogColor = new THREE.Color('#0c1222');
+
+  private dungeonTextures: DungeonTextureSet | null = null;
+  private dungeonMap: DungeonMap | null = null;
+  private activeLocation: 'hub' | 'dungeon' = 'hub';
+  private currentFloor = 0;
+  private isTransitioning = false;
+  private readonly transitionTimers: number[] = [];
 
   private readonly analogKnob: HTMLElement | null;
   private readonly moveStateEl: HTMLElement | null;
+  private readonly areaTitleEl: HTMLElement | null;
+  private readonly areaSubtitleEl: HTMLElement | null;
+  private readonly screenFadeEl: HTMLElement | null;
+  private readonly minimapCanvas: HTMLCanvasElement | null;
+  private readonly minimapCtx: CanvasRenderingContext2D | null;
+  private readonly returnHubBtn: HTMLElement | null;
   private readonly dungeonPromptEl: HTMLElement | null;
   private readonly dungeonPromptTextEl: HTMLElement | null;
+  private readonly dungeonActionBtn: HTMLElement | null;
+  private readonly dungeonActionLabelEl: HTMLElement | null;
   private readonly skillButtonRefs: SkillButtonRefs[] = [];
 
   private readonly moveWorldVec = new THREE.Vector3();
@@ -53,19 +83,20 @@ export class Game {
     this.renderer.toneMappingExposure = 1.05;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#cde0f5');
-    this.scene.fog = new THREE.FogExp2('#d7e6f5', 0.0045);
+    this.scene.background = this.hubBgColor.clone();
+    this.sceneFog = new THREE.FogExp2(this.hubFogColor.getHex(), 0.0045);
+    this.scene.fog = this.sceneFog;
 
     this.isoCamera = new IsometricCamera(
       window.innerWidth / Math.max(1, window.innerHeight),
     );
     this.input = new Input(window);
 
-    const maxAnisotropy = Math.min(
+    this.maxAnisotropy = Math.min(
       8,
       this.renderer.capabilities.getMaxAnisotropy(),
     );
-    this.hubMap = new HubMap(maxAnisotropy);
+    this.hubMap = new HubMap(this.maxAnisotropy);
     this.scene.add(this.hubMap.group);
 
     this.player = new Player();
@@ -75,9 +106,21 @@ export class Game {
 
     this.analogKnob = document.getElementById('analog-knob');
     this.moveStateEl = document.getElementById('move-state');
+    this.areaTitleEl = document.getElementById('area-title');
+    this.areaSubtitleEl = document.getElementById('area-subtitle');
+    this.screenFadeEl = document.getElementById('screen-fade');
+    this.minimapCanvas = document.getElementById(
+      'dungeon-minimap',
+    ) as HTMLCanvasElement | null;
+    this.minimapCtx = this.minimapCanvas?.getContext('2d') ?? null;
+    this.returnHubBtn = document.getElementById('hud-return-hub-btn');
     this.dungeonPromptEl = document.getElementById('dungeon-prompt');
     this.dungeonPromptTextEl = document.getElementById('dungeon-prompt-text');
+    this.dungeonActionBtn = document.getElementById('dungeon-action-btn');
+    this.dungeonActionLabelEl = document.getElementById('dungeon-action-label');
     this.cleanupMobileUi = initMobileUi();
+
+    this.returnHubBtn?.addEventListener('click', this.onReturnHubClick);
 
     document
       .querySelectorAll<HTMLElement>('[data-skill-slot]')
@@ -93,6 +136,112 @@ export class Game {
       });
 
     window.addEventListener('resize', this.onResize);
+  }
+
+  private onReturnHubClick = (): void => {
+    if (this.activeLocation === 'dungeon' && !this.isTransitioning) {
+      this.transitionToHub();
+    }
+  };
+
+  private runWithFade(swapScene: () => void): void {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+    this.screenFadeEl?.classList.add('active');
+
+    const t1 = window.setTimeout(() => {
+      swapScene();
+      const t2 = window.setTimeout(() => {
+        this.screenFadeEl?.classList.remove('active');
+        this.isTransitioning = false;
+      }, 150);
+      this.transitionTimers.push(t2);
+    }, 180);
+    this.transitionTimers.push(t1);
+  }
+
+  private transitionToDungeon(floorNumber: number): void {
+    this.runWithFade(() => {
+      if (!this.dungeonTextures) {
+        this.dungeonTextures = createDungeonTextures(this.maxAnisotropy);
+      }
+
+      if (this.dungeonMap) {
+        this.scene.remove(this.dungeonMap.group);
+        this.dungeonMap.dispose();
+        this.dungeonMap = null;
+      } else {
+        this.scene.remove(this.hubMap.group);
+      }
+
+      const nextMap = new DungeonMap(this.dungeonTextures, floorNumber);
+      this.dungeonMap = nextMap;
+      this.activeLocation = 'dungeon';
+      this.currentFloor = floorNumber;
+
+      this.scene.add(nextMap.group);
+      (this.scene.background as THREE.Color).copy(this.dungeonBgColor);
+      this.sceneFog.color.copy(this.dungeonFogColor);
+      this.sceneFog.density = 0.0155;
+      this.renderer.toneMappingExposure = 1.14;
+
+      document.body.classList.add('in-dungeon');
+      this.minimapCanvas?.classList.remove('hidden');
+      this.returnHubBtn?.classList.remove('hidden');
+
+      if (this.areaTitleEl) {
+        this.areaTitleEl.textContent = `Catacumbas Cinzentas — Andar ${floorNumber}`;
+      }
+      if (this.areaSubtitleEl) {
+        this.areaSubtitleEl.textContent = `Masmorra Randômica • ${nextMap.roomCount} Salas • Semente #${nextMap.seedCode}`;
+      }
+
+      this.player.teleportTo(
+        nextMap.spawnPosition.x,
+        nextMap.spawnPosition.z,
+        nextMap.spawnYaw,
+      );
+      this.isoCamera.snapTo(this.player.group.position);
+      this.dungeonPromptEl?.classList.remove('visible', 'is-actionable');
+    });
+  }
+
+  private transitionToHub(): void {
+    this.runWithFade(() => {
+      if (this.dungeonMap) {
+        this.scene.remove(this.dungeonMap.group);
+        this.dungeonMap.dispose();
+        this.dungeonMap = null;
+      }
+
+      this.activeLocation = 'hub';
+      this.currentFloor = 0;
+
+      if (!this.hubMap.group.parent) {
+        this.scene.add(this.hubMap.group);
+      }
+
+      (this.scene.background as THREE.Color).copy(this.hubBgColor);
+      this.sceneFog.color.copy(this.hubFogColor);
+      this.sceneFog.density = 0.0045;
+      this.renderer.toneMappingExposure = 1.05;
+
+      document.body.classList.remove('in-dungeon');
+      this.minimapCanvas?.classList.add('hidden');
+      this.returnHubBtn?.classList.add('hidden');
+
+      if (this.areaTitleEl) {
+        this.areaTitleEl.textContent = 'Salão Real da Alvorada';
+      }
+      if (this.areaSubtitleEl) {
+        this.areaSubtitleEl.textContent = 'Home • Cidadela Central';
+      }
+
+      const ret = this.hubMap.getDungeonReturnSpawn();
+      this.player.teleportTo(ret.x, ret.z, ret.yaw);
+      this.isoCamera.snapTo(this.player.group.position);
+      this.dungeonPromptEl?.classList.remove('visible', 'is-actionable');
+    });
   }
 
   private onResize = (): void => {
@@ -112,49 +261,88 @@ export class Game {
     this.lastTime = now;
     this.elapsed += dt;
 
+    const activeMap =
+      this.activeLocation === 'dungeon' && this.dungeonMap
+        ? this.dungeonMap
+        : this.hubMap;
+
     const moveInput = this.input.getMoveInput();
-    this.isoCamera.screenInputToWorld(
-      moveInput.x,
-      moveInput.y,
-      this.moveWorldVec,
-    );
+    if (!this.isTransitioning) {
+      this.isoCamera.screenInputToWorld(
+        moveInput.x,
+        moveInput.y,
+        this.moveWorldVec,
+      );
 
-    const triggeredSkills = this.input.consumeTriggeredSkills();
-    for (const slot of triggeredSkills) {
-      this.player.useSkill(slot, this.moveWorldVec);
+      const triggeredSkills = this.input.consumeTriggeredSkills();
+      for (const slot of triggeredSkills) {
+        this.player.useSkill(slot, this.moveWorldVec);
+      }
+
+      this.player.update(this.moveWorldVec, moveInput.sprint, dt, this.elapsed);
+
+      const pos = {
+        x: this.player.group.position.x,
+        z: this.player.group.position.z,
+      };
+      resolveCollisions(
+        pos,
+        this.player.radius,
+        activeMap.circleColliders,
+        activeMap.boxColliders,
+        activeMap.boundsRadius,
+      );
+      this.player.group.position.x = pos.x;
+      this.player.group.position.z = pos.z;
     }
-
-    this.player.update(this.moveWorldVec, moveInput.sprint, dt, this.elapsed);
-
-    // Resolve colisões no plano XZ com limite circular e deslizamento suave
-    const pos = {
-      x: this.player.group.position.x,
-      z: this.player.group.position.z,
-    };
-    resolveCollisions(
-      pos,
-      this.player.radius,
-      this.hubMap.circleColliders,
-      this.hubMap.boxColliders,
-      this.hubMap.boundsRadius,
-    );
-    this.player.group.position.x = pos.x;
-    this.player.group.position.z = pos.z;
 
     this.isoCamera.update(
       this.player.group.position,
       this.input.getZoomTarget(),
       dt,
     );
-    this.hubMap.update(dt, this.elapsed, this.player.group.position);
+    activeMap.update(dt, this.elapsed, this.player.group.position);
 
-    this.updateHud(moveInput.x, moveInput.y);
+    const nearbyPrompt = activeMap.getNearbyInteractionPrompt(
+      this.player.group.position,
+    );
+    const interacted = this.input.consumeInteract();
+    if (interacted && nearbyPrompt?.action && !this.isTransitioning) {
+      if (nearbyPrompt.action === 'enter-dungeon') {
+        this.transitionToDungeon(1);
+      } else if (nearbyPrompt.action === 'next-dungeon-floor') {
+        this.transitionToDungeon(this.currentFloor + 1);
+      } else if (nearbyPrompt.action === 'exit-dungeon') {
+        this.transitionToHub();
+      }
+    }
+
+    if (
+      this.activeLocation === 'dungeon' &&
+      this.dungeonMap &&
+      this.minimapCanvas &&
+      this.minimapCtx
+    ) {
+      this.dungeonMap.renderMinimap(
+        this.minimapCtx,
+        this.minimapCanvas.width,
+        this.minimapCanvas.height,
+        this.player.group.position,
+        this.player.getBodyYaw(),
+      );
+    }
+
+    this.updateHud(moveInput.x, moveInput.y, nearbyPrompt);
 
     this.renderer.render(this.scene, this.isoCamera.camera);
     this.rafId = requestAnimationFrame(this.loop);
   };
 
-  private updateHud(inputX: number, inputY: number): void {
+  private updateHud(
+    inputX: number,
+    inputY: number,
+    nearbyPrompt: InteractionPrompt | null,
+  ): void {
     if (this.analogKnob) {
       const radiusPx = 13;
       const offsetX = inputX * radiusPx;
@@ -190,26 +378,47 @@ export class Game {
       if (ref.timerText) {
         ref.timerText.textContent = state.ready
           ? ''
-          : state.cooldownRemaining >= 1
-            ? state.cooldownRemaining.toFixed(1)
-            : state.cooldownRemaining.toFixed(1);
+          : state.cooldownRemaining.toFixed(1);
       }
     }
 
     if (this.dungeonPromptEl) {
-      const promptText = this.hubMap.getNearbyInteractionPrompt(
-        this.player.group.position,
-      );
-      if (promptText && this.dungeonPromptTextEl) {
-        this.dungeonPromptTextEl.textContent = promptText;
+      if (nearbyPrompt && this.dungeonPromptTextEl) {
+        this.dungeonPromptTextEl.textContent = nearbyPrompt.label;
       }
-      this.dungeonPromptEl.classList.toggle('visible', promptText !== null);
+      const isActionable = Boolean(nearbyPrompt?.action);
+      if (this.dungeonActionBtn) {
+        this.dungeonActionBtn.classList.toggle('hidden', !isActionable);
+      }
+      if (isActionable && nearbyPrompt?.actionLabel && this.dungeonActionLabelEl) {
+        this.dungeonActionLabelEl.textContent = nearbyPrompt.actionLabel;
+      }
+      this.dungeonPromptEl.classList.toggle('is-actionable', isActionable);
+      this.dungeonPromptEl.classList.toggle('visible', nearbyPrompt !== null);
     }
   }
 
   public dispose(): void {
     cancelAnimationFrame(this.rafId);
+    for (const id of this.transitionTimers) {
+      clearTimeout(id);
+    }
+    this.transitionTimers.length = 0;
+
+    if (this.dungeonMap) {
+      this.dungeonMap.dispose();
+      this.dungeonMap = null;
+    }
+    if (this.dungeonTextures) {
+      this.dungeonTextures.stoneFloorMap.dispose();
+      this.dungeonTextures.stoneFloorBump.dispose();
+      this.dungeonTextures.corridorFloorMap.dispose();
+      this.dungeonTextures.stoneWallMap.dispose();
+      this.dungeonTextures = null;
+    }
+
     window.removeEventListener('resize', this.onResize);
+    this.returnHubBtn?.removeEventListener('click', this.onReturnHubClick);
     this.cleanupMobileUi();
     this.input.dispose(window);
     this.renderer.dispose();

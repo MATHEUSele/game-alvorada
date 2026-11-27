@@ -492,6 +492,19 @@ export class Player {
     return this.activeSkillLabel;
   }
 
+  public getBodyYaw(): number {
+    return this.bodyPivot.rotation.y;
+  }
+
+  public teleportTo(x: number, z: number, yaw: number): void {
+    this.group.position.set(x, 0, z);
+    this.velocity.set(0, 0, 0);
+    this.targetVelocity.set(0, 0, 0);
+    this.dashTimer = 0;
+    this.dashSpeed = 0;
+    this.bodyPivot.rotation.set(0, yaw, 0);
+  }
+
   public triggerAction(name: PlayerOneShotAction): boolean {
     if (name === 'AttackSlash' || name === 'AttackSlash2' || name === 'AttackSlash3') {
       const pair = this.slashPairs.get(name);

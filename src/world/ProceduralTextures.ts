@@ -567,3 +567,191 @@ function createGardenGrassTexture(maxAnisotropy: number): THREE.CanvasTexture {
   tex.anisotropy = maxAnisotropy;
   return tex;
 }
+
+export interface DungeonTextureSet {
+  stoneFloorMap: THREE.CanvasTexture;
+  stoneFloorBump: THREE.CanvasTexture;
+  corridorFloorMap: THREE.CanvasTexture;
+  stoneWallMap: THREE.CanvasTexture;
+}
+
+export function createDungeonTextures(maxAnisotropy = 4): DungeonTextureSet {
+  const { colorMap: stoneFloorMap, bumpMap: stoneFloorBump } =
+    createDungeonStoneFloorTextures(maxAnisotropy);
+  const corridorFloorMap = createDungeonCorridorTexture(maxAnisotropy);
+  const stoneWallMap = createDungeonWallTexture(maxAnisotropy);
+
+  return {
+    stoneFloorMap,
+    stoneFloorBump,
+    corridorFloorMap,
+    stoneWallMap,
+  };
+}
+
+function createDungeonStoneFloorTextures(maxAnisotropy: number): {
+  colorMap: THREE.CanvasTexture;
+  bumpMap: THREE.CanvasTexture;
+} {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  const bumpCanvas = document.createElement('canvas');
+  bumpCanvas.width = size;
+  bumpCanvas.height = size;
+  const bctx = bumpCanvas.getContext('2d')!;
+
+  const rng = mulberry32(9143);
+
+  ctx.fillStyle = '#19202e';
+  ctx.fillRect(0, 0, size, size);
+
+  bctx.fillStyle = '#6e6e6e';
+  bctx.fillRect(0, 0, size, size);
+
+  const tiles = 4;
+  const tilePx = size / tiles;
+
+  for (let row = 0; row < tiles; row++) {
+    for (let col = 0; col < tiles; col++) {
+      const x = col * tilePx;
+      const y = row * tilePx;
+      const shade = Math.floor(rng() * 14);
+      const r = 34 + shade;
+      const g = 42 + shade;
+      const b = 58 + shade + Math.floor(rng() * 6);
+
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.fillRect(x + 3, y + 3, tilePx - 6, tilePx - 6);
+
+      // Chanfro superior esquerdo discreto para leitura de grid
+      ctx.fillStyle = 'rgba(130, 158, 206, 0.14)';
+      ctx.fillRect(x + 3, y + 3, tilePx - 6, 3);
+      ctx.fillRect(x + 3, y + 3, 3, tilePx - 6);
+
+      // Sombra inferior direita da laje
+      ctx.fillStyle = 'rgba(8, 12, 20, 0.45)';
+      ctx.fillRect(x + 3, y + tilePx - 6, tilePx - 6, 3);
+      ctx.fillRect(x + tilePx - 6, y + 3, 3, tilePx - 6);
+
+      // Veios frios sutis
+      if (rng() > 0.35) {
+        ctx.strokeStyle = 'rgba(116, 142, 184, 0.16)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + 12 + rng() * (tilePx - 24), y + 10);
+        ctx.quadraticCurveTo(
+          x + tilePx * (0.25 + rng() * 0.5),
+          y + tilePx * 0.5,
+          x + 12 + rng() * (tilePx - 24),
+          y + tilePx - 12,
+        );
+        ctx.stroke();
+      }
+
+      bctx.fillStyle = `rgb(${175 + shade}, ${175 + shade}, ${175 + shade})`;
+      bctx.fillRect(x + 4, y + 4, tilePx - 8, tilePx - 8);
+      bctx.strokeStyle = '#303030';
+      bctx.lineWidth = 5;
+      bctx.strokeRect(x + 1, y + 1, tilePx - 2, tilePx - 2);
+    }
+  }
+
+  const colorMap = new THREE.CanvasTexture(canvas);
+  colorMap.colorSpace = THREE.SRGBColorSpace;
+  colorMap.wrapS = THREE.RepeatWrapping;
+  colorMap.wrapT = THREE.RepeatWrapping;
+  colorMap.anisotropy = maxAnisotropy;
+
+  const bumpMap = new THREE.CanvasTexture(bumpCanvas);
+  bumpMap.wrapS = THREE.RepeatWrapping;
+  bumpMap.wrapT = THREE.RepeatWrapping;
+  bumpMap.anisotropy = maxAnisotropy;
+
+  return { colorMap, bumpMap };
+}
+
+function createDungeonCorridorTexture(maxAnisotropy: number): THREE.CanvasTexture {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const rng = mulberry32(4409);
+
+  ctx.fillStyle = '#181e2c';
+  ctx.fillRect(0, 0, size, size);
+
+  const tiles = 4;
+  const tilePx = size / tiles;
+
+  for (let row = 0; row < tiles; row++) {
+    for (let col = 0; col < tiles; col++) {
+      const x = col * tilePx;
+      const y = row * tilePx;
+      const tone = Math.floor(rng() * 10);
+      ctx.fillStyle = `rgb(${29 + tone}, ${36 + tone}, ${52 + tone})`;
+      ctx.fillRect(x + 3, y + 3, tilePx - 6, tilePx - 6);
+
+      ctx.strokeStyle = 'rgba(182, 148, 86, 0.16)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + 7, y + 7, tilePx - 14, tilePx - 14);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = maxAnisotropy;
+  return tex;
+}
+
+function createDungeonWallTexture(maxAnisotropy: number): THREE.CanvasTexture {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const rng = mulberry32(6117);
+
+  ctx.fillStyle = '#1b2232';
+  ctx.fillRect(0, 0, size, size);
+
+  const rows = 4;
+  const cols = 3;
+  const rowH = size / rows;
+  const blockW = size / cols;
+
+  for (let r = 0; r < rows; r++) {
+    const shift = (r % 2) * (blockW * 0.5);
+    for (let c = -1; c <= cols; c++) {
+      const x = c * blockW + shift + 3;
+      const y = r * rowH + 3;
+      const w = blockW - 6;
+      const h = rowH - 6;
+      const v = Math.floor(rng() * 14);
+
+      ctx.fillStyle = `rgb(${44 + v}, ${52 + v}, ${70 + v})`;
+      ctx.fillRect(x, y, w, h);
+
+      ctx.fillStyle = 'rgba(138, 162, 204, 0.14)';
+      ctx.fillRect(x, y, w, 3);
+
+      ctx.strokeStyle = 'rgba(10, 14, 24, 0.55)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1.5, 1.5);
+  tex.anisotropy = maxAnisotropy;
+  return tex;
+}

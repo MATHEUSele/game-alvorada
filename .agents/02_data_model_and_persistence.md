@@ -9,12 +9,17 @@ Atualmente todas as entidades vivem em memória no runtime client-side (TypeScri
   - **SwordVfx (`src/entities/SwordVfx.ts`):** efeitos visuais 3D temporizados (`slash`, `spin`, `thrust`, `ult`) acoplados ao `bodyPivot` do jogador.
   - **PlayerEquipmentSockets:** relação 1:1 com grupos anexados aos ossos do esqueleto (`head` → `Head`, `chest` → `Spine2`, `back` → `Spine2`, `rightHand` → `RightHand`, `leftHand` → `LeftHand`).
 - **MoveInput (`src/core/Input.ts`):** `{ x: number, y: number, sprint: boolean }`, unificando teclado e `TouchControls`.
-- **Colisores (`src/world/Collision.ts`):**
+- **Colisores e Interação (`src/world/Collision.ts`):**
   - `CircleCollider`: `{ x: number, z: number, radius: number }`.
   - `BoxCollider`: `{ minX: number, maxX: number, minZ: number, maxZ: number }`.
+  - `InteractionAction`: `'enter-dungeon' | 'exit-dungeon' | 'next-dungeon-floor'`.
+  - `InteractionZone` / `InteractionPrompt`: `{ x, z, radiusSq, label, action?, actionLabel? }`.
 - **HubMap (`src/world/HubMap.ts`):**
-  - `InteractionZone`: `{ x: number, z: number, radiusSq: number, label: string }`.
   - `BannerEntry`: `{ mesh: THREE.Mesh, phase: number }`.
+- **DungeonMap (`src/world/DungeonMap.ts`):**
+  - `DungeonRoom`: `{ id, gx, gz, w, h, centerX, centerZ, connections, kind: 'entrance' | 'chamber' | 'treasure' | 'sanctum' }`.
+  - `DungeonCorridor` e `MergedWallRect`: corredores de 2 células e paredes mescladas (*lowCutaway* `1.08m` vs *high* `3.6m`).
+  - `DungeonLayout`: layout completo gerado por `generateDungeonLayout(seed)` com semente `mulberry32`, código `#XXXX` e `spawnYaw`.
 - **NetworkTarget (`vite.config.ts` / `src/core/MobileUi.ts`):** `{ label: string, ip: string, priority: number }` no servidor e `{ label: string, url: string, qrSvg: string }` no payload JSON.
 - **Entidades planejadas no backlog (a detalhar nas tarefas futuras):**
   - Atributos de personagem (vida, dano, defesa, velocidade), inventário e catálogo de equipamentos/loot com raridades.

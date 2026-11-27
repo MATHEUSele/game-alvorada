@@ -15,9 +15,10 @@ Componentes principais:
   - `Player.ts`: protagonista 3D carregado via `GLTFLoader` (`public/models/protagonist.glb`), arma `Weapon_Dawnblade` presa ao osso `Weapon_R`, animação esquelética em camadas (`UpperBody` / `LowerBody` via `AnimationMixer`) permitindo ataques em movimento sem *foot-sliding* (`Idle`, `Walk`, `Run`, `Dodge`, `AttackSlash`, `AttackSlash2`, `AttackSlash3`, `SkillSpin`, `SkillThrust`, `SkillUlt`) e sockets presos a ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`).
   - `SwordVfx.ts`: efeitos visuais 3D em Three.js com textura procedural de rastro crescente estilo LoL para o combo de 3 golpes do Corte Simples, ciclone circular 360°, feixe perfurante e onda de choque/pilar da Ultimate.
 - **Mundo (`src/world/`):**
-  - `HubMap.ts`: cenário da Home (*Salão Real da Alvorada*), portas monumentais (Portal das Masmorras, Forja, Loja), partículas de poeira/pétalas, Jardim Real externo e zonas de interação.
-  - `Collision.ts`: resolução de colisão círculo-vs-círculo e círculo-vs-AABB com deslizamento suave (*wall-sliding*) e limite circular da rotunda.
-  - `ProceduralTextures.ts`: geração procedural de texturas via HTML5 Canvas (cerâmica desenhada, mármore e mapas de relevo).
+  - `HubMap.ts`: cenário da Home (*Salão Real da Alvorada*), portas monumentais (Portal das Masmorras acionável, Forja, Loja), partículas de poeira/pétalas, Jardim Real externo e zonas de interação (`InteractionZone`).
+  - `DungeonMap.ts`: gerador procedural/randômico de masmorras em grade `48x48` (`generateDungeonLayout`) com 6–8 salas conectadas (`entrance`, `chamber`, `treasure`, `sanctum`), corredores de 2 células, paredes mescladas (greedy 2D) com recorte *cutaway* para visão isométrica, baú CC0 (`chest_closed.glb`), Portal de Retorno, Fenda Abissal para descer andares e renderização de minimapa em Canvas.
+  - `Collision.ts`: resolução de colisão círculo-vs-círculo e círculo-vs-AABB com deslizamento suave (*wall-sliding*), limite circular e seleção da `InteractionZone` mais próxima (`findNearbyInteraction`).
+  - `ProceduralTextures.ts`: geração procedural de texturas via HTML5 Canvas (`createHallTextures` claro e `createDungeonTextures` sombrio com lajes de ardósia, corredores e alvenaria).
 - **Pipeline 3D e Build (`vite.config.ts`, `assets-src/`, `public/`):**
   - `assets-src/protagonist.blend`: arquivo fonte editável no Blender 5.3.0 (conectado via MCP `mcp-for-blender`).
   - `public/models/protagonist.glb`: asset 3D exportado pronto para WebGL.

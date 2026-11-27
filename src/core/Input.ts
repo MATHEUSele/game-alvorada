@@ -26,6 +26,8 @@ export class Input {
   private readonly touchControls: TouchControls;
   private readonly pendingSkills: SwordSkillSlot[] = [];
   private readonly pcSkillButtons: HTMLElement[] = [];
+  private readonly interactBtn: HTMLElement | null;
+  private pendingInteract = false;
   private zoomTarget = 1.0;
 
   private static readonly MIN_ZOOM = 0.72;
@@ -43,7 +45,16 @@ export class Input {
       this.pcSkillButtons.push(btn);
       btn.addEventListener('pointerdown', this.onPcSkillPointerDown);
     });
+
+    this.interactBtn = document.getElementById('dungeon-action-btn');
+    this.interactBtn?.addEventListener('pointerdown', this.onInteractPointerDown);
   }
+
+  private onInteractPointerDown = (event: PointerEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.pendingInteract = true;
+  };
 
   private onPcSkillPointerDown = (event: PointerEvent): void => {
     const btn = event.currentTarget as HTMLElement | null;
@@ -57,6 +68,15 @@ export class Input {
     this.pressed.add(event.code);
 
     if (!event.repeat) {
+      if (event.code === 'KeyF' || event.code === 'Enter') {
+        const modal = document.getElementById('qr-modal');
+        const isModalOpen = modal && !modal.classList.contains('hidden');
+        if (!isModalOpen) {
+          this.pendingInteract = true;
+        }
+        return;
+      }
+
       const skill = KEY_TO_SKILL[event.code];
       if (skill) {
         if (event.code === 'Space') event.preventDefault();
@@ -114,6 +134,12 @@ export class Input {
     return { x, y, sprint: keyboardSprint || touch.sprint };
   }
 
+  public consumeInteract(): boolean {
+    if (!this.pendingInteract) return false;
+    this.pendingInteract = false;
+    return true;
+  }
+
   public consumeTriggeredSkills(): SwordSkillSlot[] {
     const touchSkills = this.touchControls.consumeSkills();
     if (this.pendingSkills.length === 0 && touchSkills.length === 0) return [];
@@ -128,6 +154,7 @@ export class Input {
     target.removeEventListener('keyup', this.onKeyUp);
     target.removeEventListener('blur', this.onBlur);
     target.removeEventListener('wheel', this.onWheel);
+    this.interactBtn?.removeEventListener('pointerdown', this.onInteractPointerDown);
     for (const btn of this.pcSkillButtons) {
       btn.removeEventListener('pointerdown', this.onPcSkillPointerDown);
     }

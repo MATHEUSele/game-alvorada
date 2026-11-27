@@ -1,13 +1,12 @@
 import * as THREE from 'three';
-import type { BoxCollider, CircleCollider } from './Collision';
+import {
+  findNearbyInteraction,
+  type BoxCollider,
+  type CircleCollider,
+  type InteractionPrompt,
+  type InteractionZone,
+} from './Collision';
 import { createHallTextures } from './ProceduralTextures';
-
-interface InteractionZone {
-  x: number;
-  z: number;
-  radiusSq: number;
-  label: string;
-}
 
 interface BannerEntry {
   mesh: THREE.Mesh;
@@ -726,8 +725,10 @@ export class HubMap {
     this.interactionZones.push({
       x: promptPos.x,
       z: promptPos.z,
-      radiusSq: 3.1 * 3.1,
-      label: 'Portal das Masmorras — Expedições Randômicas em breve',
+      radiusSq: 3.5 * 3.5,
+      label: 'Portal das Masmorras — Catacumbas Instáveis',
+      action: 'enter-dungeon',
+      actionLabel: 'Entrar na Masmorra',
     });
   }
 
@@ -1452,16 +1453,13 @@ export class HubMap {
     this.group.add(gardenGroup);
   }
 
-  public getNearbyInteractionPrompt(pos: THREE.Vector3): string | null {
-    for (let i = 0; i < this.interactionZones.length; i++) {
-      const zone = this.interactionZones[i];
-      const dx = pos.x - zone.x;
-      const dz = pos.z - zone.z;
-      if (dx * dx + dz * dz <= zone.radiusSq) {
-        return zone.label;
-      }
-    }
-    return null;
+  public getDungeonReturnSpawn(): { x: number; z: number; yaw: number } {
+    const p = hallPolar(0, 10.0);
+    return { x: p.x, z: p.z, yaw: p.inwardYaw };
+  }
+
+  public getNearbyInteractionPrompt(pos: THREE.Vector3): InteractionPrompt | null {
+    return findNearbyInteraction(this.interactionZones, pos);
   }
 
   public update(dt: number, elapsed: number, playerPos: THREE.Vector3): void {

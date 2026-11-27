@@ -1,10 +1,11 @@
 # Regras de Negócio e Lógica — Game Alvorada (Santuário Cinzento)
 
 ## 1. Casos de uso e fluxos
-**Fluxos implementados (v0.2 / Fase 2.5):**
-1. **Exploração da Home (*Salão Real da Alvorada*):** jogador inicia no centro `(0, 0, 0)` e se move livremente em 8 direções (teclado `WASD`/setas) ou 360° (analógico touch), com corrida (`Shift` ou botão `CORRER`) e zoom da câmera (`Scroll`).
-2. **Feedback de proximidade:** ao se aproximar de uma `InteractionZone` (Portal das Masmorras, Forja ou Loja Real), o HUD exibe o alerta contextual correspondente (`#dungeon-prompt`).
-3. **Acesso multiplataforma via QR Code:** no PC, o botão `Jogar no Celular` consulta `/__mobile-qr.json` e exibe o QR Code da rede local para abrir o jogo no smartphone com controles touch e opção de tela cheia/PWA.
+**Fluxos implementados (v0.3 / Pré-Alfa):**
+1. **Exploração da Home (*Salão Real da Alvorada*):** jogador inicia no centro `(0, 0, 0)` e se move livremente em 8 direções (teclado `WASD`/setas) ou 360° (analógico touch), com corrida (`Shift` ou botão `CORRER`), habilidades de espada (`1`–`4` / `J`, `Q`, `E`, `R`, `Espaço` e cluster mobile) e zoom da câmera (`Scroll`).
+2. **Feedback de proximidade e Portal das Masmorras:** ao se aproximar de uma `InteractionZone`, o HUD exibe o alerta contextual correspondente (`#dungeon-prompt`). Junto ao Grande Portal Norte do Salão Real, surge o botão interativo **Entrar na Masmorra** (tecla `F` / `Enter` no PC ou toque direto no botão).
+3. **Masmorra Procedural (*Catacumbas Cinzentas*):** ao entrar pelo portal, o jogador é transportado com fade de transição para uma masmorra randômica (6–8 salas e corredores de 2 células com semente única, atmosfera e iluminação sombria contrastante, paredes frontais em recorte *cutaway*, minimapa isométrico, sala de tesouro com baú CC0 e Santuário final com Fenda Abissal para descer a novos andares randômicos ou Selo/Portal para retornar ao Salão Real).
+4. **Acesso multiplataforma via QR Code:** no PC, o botão `Jogar no Celular` consulta `/__mobile-qr.json` e exibe o QR Code da rede local para abrir o jogo no smartphone com controles touch e opção de tela cheia/PWA.
 
 **Fluxos planejados no backlog:**
 - **Lore e narrativa:** definir universo, função da Home, origem das masmorras randômicas, protagonista e NPCs.
