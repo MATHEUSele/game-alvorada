@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Logo Game Alvorada">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="55%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="logoGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="55%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D4A64A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Margem ~10% preservada; fundo transparente -->
+  <rect x="28" y="28" width="200" height="200" rx="44" fill="url(#logoGrad)" stroke="#D4A64A" stroke-width="4" stroke-opacity="0.75"/>
+
+  <!-- Brasão real central -->
+  <path d="M128 56 L186 78 L180 142 C177 176 156 198 128 210 C100 198 79 176 76 142 L70 78 Z"
+        fill="#0F172A" fill-opacity="0.52" stroke="url(#logoGold)" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- Espada arcana -->
+  <path d="M128 74 L137 96 L133 162 L123 162 L119 96 Z" fill="#E0F2FE"/>
+  <path d="M104 162 L152 162" stroke="url(#logoGold)" stroke-width="7" stroke-linecap="round"/>
+  <line x1="128" y1="162" x2="128" y2="188" stroke="#D4A64A" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="128" cy="192" r="5.5" fill="#FDE68A"/>
+
+  <!-- Estrela da Alvorada -->
+  <polygon points="128,60 132,70 142,74 132,78 128,88 124,78 114,74 124,70" fill="#FDE68A"/>
+</svg>
