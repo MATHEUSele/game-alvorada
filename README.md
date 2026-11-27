@@ -3,14 +3,17 @@
 <img src="assets/banner.svg" alt="Game Alvorada — Santuário Cinzento" width="100%" />
 
 <p>
-  <img src="https://img.shields.io/badge/versão-0.1.0-1E3A8A?style=for-the-badge" alt="Versão 0.1.0" />
+  <img src="https://img.shields.io/badge/versão-0.1.0_(Pré--Alfa_v0.3)-1E3A8A?style=for-the-badge" alt="Versão 0.1.0 Pré-Alfa v0.3" />
   <img src="https://img.shields.io/badge/stack-Three.js_•_TypeScript_•_Vite-D4A64A?style=for-the-badge" alt="Three.js, TypeScript e Vite" />
+  <img src="https://img.shields.io/badge/3D_&_Assets-Blender_5.3_•_40_Modelos_GLB-581C87?style=for-the-badge" alt="Blender 5.3 e 40 modelos GLB" />
+  <img src="https://img.shields.io/badge/plataformas-PC_+_Celular_Wi--Fi_QR-059669?style=for-the-badge" alt="PC e Celular Wi-Fi QR" />
 </p>
 
-**Action RPG isométrico 3D rodando direto no navegador — no PC e no celular.**  
-Inspirado em *AnimA ARPG*, *Diablo* e na estética estilizada de *League of Legends*, com Home luminosa e protagonista 3D rigado no Blender.
+**Action RPG isométrico 3D direto no navegador — do Salão Real luminoso às Masmorras Subterrâneas.**  
+Inspirado em *AnimA ARPG*, *Diablo* e na estética estilizada de *League of Legends*, com protagonista rigado no Blender, poderes da espada *Dawnblade*, geração procedural de masmorras e inimigos esqueletos animados.
 
 [Por que usar](#-por-que-usar) •
+[Controles e poderes](#-controles-e-poderes-da-dawnblade) •
 [Fluxo e arquitetura](#-fluxo-e-arquitetura) •
 [Funcionalidades](#-funcionalidades-e-comandos) •
 [Estrutura](#-estrutura) •
@@ -23,15 +26,43 @@ Inspirado em *AnimA ARPG*, *Diablo* e na estética estilizada de *League of Lege
 
 ## 🎯 Por que usar
 
-O **Game Alvorada (Santuário Cinzento)** entrega um protótipo jogável em WebGL sem dependências pesadas de engine externa, mantendo resposta ágil estilo MOBA/ARPG a 60 fps tanto no desktop quanto no smartphone.
-
-- **Salão Real da Alvorada (Home luminosa):** rotunda circular com piso de cerâmica branca desenhada, luz solar diagonal através de janelões de vitral, portas monumentais (Portal das Masmorras, Forja e Loja Real) e Jardim Real externo com espelho d'água e pétalas ao vento.
-- **Protagonista 3D real do Blender (`protagonist.glb`):** modelo estilizado com proporções heroicas, 15 texturas *hand-painted*, esqueleto humanoide de 22 ossos, 5 animações (`Idle`, `Walk`, `Run`, `AttackCombo`, `Dodge`) e sockets acoplados aos ossos reais (`Head`, `Spine2`, `RightHand`, `LeftHand`).
-- **PC + Celular na mesma rede local:** o servidor de desenvolvimento gera QR Code automático no terminal e no HUD (`Jogar no Celular`) para abrir o jogo direto no smartphone com analógico virtual 360°, botão de correr multi-touch e modo tela cheia/PWA.
+O **Game Alvorada (Santuário Cinzento)** entrega um protótipo ARPG 3D jogável em WebGL sem dependências pesadas de engine externa, mantendo resposta ágil a 60 fps tanto no desktop quanto no smartphone.
 
 <div align="center">
-  <img src="assets/demo.svg" alt="Demonstração de Game Alvorada" width="90%" />
+  <img src="assets/showcase-art.jpg" alt="Arte Conceitual — Salão Real da Alvorada e Catacumbas Cinzentas" width="96%" />
 </div>
+
+<br />
+
+- **Salão Real da Alvorada (Home luminosa):** rotunda circular em mármore e cerâmica desenhada, raios solares através de janelões de vitral, Jardim Real externo com espelho d'água e Grande Portal Norte acionável (`F` / `Enter` ou toque) para entrar nas expedições.
+- **Protagonista 3D & Combate em Movimento (`protagonist.glb`):** modelo estilizado criado no Blender 5.3.0 (23 ossos, 10 clipes, arma `Weapon_Dawnblade` em `Weapon_R` e 5 sockets reais), com mistura esquelética `UpperBody` / `LowerBody` no `AnimationMixer` para desferir combos de espada correndo sem *foot-sliding*, além de VFX 3D (`SwordVfx.ts`).
+- **Masmorras Procedurais dentro da Montanha (`DungeonMap.ts`):** grade `104x104` com 6 a 8 salas amplas (`19.2m` a `26.4m`) e corredores de `7.2m`, paredes *cutaway* que nunca tampam o herói, fundações descendo até o leito da caverna, anfiteatro de montanhas subterrâneas, iluminação dinâmica de 6 `PointLight`s de fogo, minimapa isométrico, baús dourados e hordas de Esqueletos animados (`Minion`, `Rogue`, `Warrior` e `Champion`).
+- **PC + Celular instantâneo na mesma rede Wi-Fi:** o dev server (`vite --host`) expõe QR Code automático no terminal e no HUD (`Jogar no Celular`) abrindo o jogo no smartphone com analógico virtual 360°, cluster radial de poderes estilo MOBA, corrida multi-touch e PWA em tela cheia.
+
+<div align="center">
+  <img src="assets/showcase.svg" alt="Arquitetura e 4 Pilares de Game Alvorada" width="100%" />
+</div>
+
+<br />
+
+<div align="center">
+  <img src="assets/demo.svg" alt="Demonstração de Game Alvorada" width="92%" />
+</div>
+
+---
+
+## 🎮 Controles e poderes da Dawnblade
+
+| Ação | Teclado (PC) | Celular (Touch) | Comportamento em jogo |
+|---|---|---|---|
+| **Mover** | `W` `A` `S` `D` / Setas | Analógico 360° (esquerda) | Movimento livre alinhado à projeção isométrica com *wall-sliding* |
+| **Correr** | `Shift` | Botão `CORRER` | Aumenta velocidade e alterna suavemente para o clipe `Run` |
+| **Interagir / Portal** | `F` / `Enter` | Botão contextual no topo | Entra na masmorra pelo Portal Norte, desce andares na Fenda ou volta ao Salão |
+| **Corte da Alvorada** | `1` / `J` (ou clique) | Botão principal `CORTE` | Combo de 3 golpes (`UpperBody` livre durante corrida) com rastro crescente |
+| **Giro Ciclone 360°** | `2` / `Q` / `K` | Botão `GIRO` | Ataque giratório em área (3 pulsos 360°, cooldown `3.5s`) |
+| **Investida Real** | `3` / `E` / `L` | Botão `DASH` | Avanço perfurante direcional com cone sônico (cooldown `4.5s`) |
+| **ULT: Julgamento** | `4` / `R` / `Espaço` | Botão dourado `ULT` | Salto heroico com impacto em área, onda de choque e pilar solar (cooldown `9.0s`) |
+| **Zoom da Câmera** | `Scroll` do mouse | — | Ajusta aproximação isométrica (`[0.72, 1.45]`) |
 
 ---
 
@@ -39,10 +70,11 @@ O **Game Alvorada (Santuário Cinzento)** entrega um protótipo jogável em WebG
 
 ```mermaid
 flowchart LR
-  A["Entrada: PC (WASD + Shift + Scroll) / Touch 360°"] --> B["IsometricCamera: Projeta tela para plano XZ"]
-  B --> C["Player: Movimento + GLB AnimationMixer"]
-  C --> D["Collision & HubMap: Wall-sliding + Zonas"]
-  D --> E["WebGLRenderer + HUD / Prompt Contextual"]
+  A["Entrada: Teclado + Mouse / TouchControls 360°"] --> B["IsometricCamera: Projeta tela para plano XZ (far 360)"]
+  B --> C["Player: Upper/Lower AnimationMixer + SwordVfx + Hitboxes"]
+  C --> D["HubMap (Salão Real) ⇄ DungeonMap (Grade 104x104)"]
+  D --> E["SkeletonEnemy AI + Collision Wall-Sliding"]
+  E --> F["WebGLRenderer + HUD + Minimapa Isométrico"]
 ```
 
 ---
@@ -52,11 +84,11 @@ flowchart LR
 | Item / Comando | Emoji | O que faz | Entrada / Saída |
 |---|:---:|---|---|
 | `npm run dev` | 🌐 | Sobe servidor Vite (`--host`) com QR Code mobile em `/__mobile-qr.json` | Abre em `http://localhost:5173/` (PC e Wi-Fi local) |
-| `npm run build` | 🏗️ | Valida tipos (`tsc --noEmit`) e gera bundle otimizado em `dist/` | Código fonte `src/` + `public/` → `dist/` |
-| `npm run preview` | 👀 | Serve localmente o build de produção para inspeção | Lê `dist/` gerado pelo build |
-| `WASD` / `Shift` / `Scroll` | 🎮 | Movimentação em 8 direções alinhada à câmera, corrida e zoom | Controle responsivo com deslizamento suave (*wall-sliding*) |
-| `Jogar no Celular` | 📱 | Exibe QR Code da rede local e ativa analógico 360° + correr multi-touch | Endpoint `GET /__mobile-qr.json` → SVG de QR Code |
-| `public/models/protagonist.glb` | 🧍 | Modelo 3D estilizado criado no Blender 5.3.0 via MCP (`assets-src/protagonist.blend`) | Carregado por `GLTFLoader` + `AnimationMixer` com 5 clipes |
+| `npm run build` | 🏗️ | Valida tipos (`tsc --noEmit`) e gera bundle otimizado em `dist/` | `src/` + `public/` → `dist/` |
+| `npm run preview` | 👀 | Serve localmente o build de produção gerado em `dist/` | Lê bundle estático de `dist/` |
+| `DungeonMap.ts` | 🏔️ | Gera masmorras aleatórias com fundações, montanhas, tochas e Fenda Abissal | Semente única `mulberry32` → salas, colisores e minimapa |
+| `SkeletonEnemy.ts` | 💀 | Instancia `minion`, `rogue`, `warrior` e `champion` com armas, barra HP e IA | `SkeletonUtils.clone` + `PlayerAttackHitbox` → dano/morte |
+| `public/models/` | 🗿 | Protagonista Blender (`protagonist.glb`) + 39 modelos CC0 1.0 organizados por domínio | `GLTFLoader` + `DungeonAssetLibrary` / `SkeletonAssetLibrary` |
 
 ---
 
@@ -67,36 +99,43 @@ flowchart LR
 
 ```text
 game-alvorada/
-├── .agents/                    # Fonte da verdade (config, docs técnicos 01..05, backlog e sessões)
-├── assets/                     # Identidade visual do README (banner, logo e demo em SVG)
+├── .agents/                          # Fonte da verdade (config, docs técnicos 01..05, catálogo CC0 e backlog)
+├── assets/                           # Identidade visual do README (banner, logo, demo, showcase e showcase-art)
 ├── assets-src/
-│   └── protagonist.blend       # Arquivo fonte editável do protagonista (Blender 5.3.0)
+│   └── protagonist.blend             # Arquivo fonte editável do protagonista (Blender 5.3.0)
 ├── planejamentos-e-instrucoes/
-│   └── BACKLOG.md              # Histórico das fases iniciais do protótipo
+│   └── BACKLOG.md                    # Histórico das fases iniciais do protótipo
 ├── public/
-│   ├── manifest.webmanifest    # Manifesto PWA para instalação/tela cheia no celular
+│   ├── manifest.webmanifest          # Manifesto PWA para instalação e tela cheia no celular
 │   └── models/
-│       └── protagonist.glb     # Protagonista 3D rigado (22 ossos, 5 animações, 1,39 MB)
+│       ├── protagonist.glb           # Protagonista rigado (23 ossos, 10 animações, Dawnblade em Weapon_R)
+│       ├── characters/               # 6 modelos CC0 (npc_knight, rat, spider e esqueletos minion/rogue/warrior)
+│       ├── dungeon/                  # 16 modelos CC0 de arquitetura, props e montanhas (KayKit + Quaternius)
+│       └── items/                    # 17 modelos CC0 de equipamentos, baús, poções, moedas e armas de esqueletos
 ├── src/
 │   ├── camera/
-│   │   └── IsometricCamera.ts  # Câmera isométrica próxima, follow suave e projeção tela → XZ
+│   │   └── IsometricCamera.ts        # Câmera isométrica próxima, follow suave, far 360 e projeção tela → XZ
 │   ├── core/
-│   │   ├── Game.ts             # WebGLRenderer, cena, loop principal e atualização do HUD
-│   │   ├── Input.ts            # Teclado (WASD/Setas/Shift), Scroll e unificação com Touch
-│   │   ├── MobileUi.ts         # Modal de QR Code, tela cheia e adaptações iOS/PWA
-│   │   └── TouchControls.ts    # Analógico virtual 360° e botão correr multi-touch
+│   │   ├── Game.ts                   # WebGLRenderer, transição Home ⇄ Masmorra, combate, loop e HUD
+│   │   ├── Input.ts                  # Teclado (WASD/Shift/F/Enter/1-4/QER), Scroll e ações touch
+│   │   ├── MobileUi.ts               # Modal de QR Code Wi-Fi, tela cheia e suporte iOS/PWA
+│   │   └── TouchControls.ts          # Analógico virtual 360° e cluster radial MOBA multi-touch
 │   ├── entities/
-│   │   └── Player.ts           # GLTFLoader, AnimationMixer, sockets nos ossos e cinemática
+│   │   ├── Player.ts                 # GLTFLoader, split Upper/Lower Body, sockets, combos e hitboxes
+│   │   ├── SkeletonEnemy.ts          # Inimigos esqueletos animados, armas em handslot, IA e barra de vida 3D
+│   │   └── SwordVfx.ts               # Efeitos 3D de rastro crescente, Giro 360°, Investida e Ultimate
 │   ├── world/
-│   │   ├── Collision.ts        # Colisão círculo-vs-círculo e círculo-vs-AABB (wall-sliding)
-│   │   ├── HubMap.ts           # Salão Real da Alvorada, portas, partículas e Jardim Real
-│   │   └── ProceduralTextures.ts # Texturas procedurais via Canvas (cerâmica e mármore)
-│   ├── main.ts                 # Ponto de entrada (#game-canvas)
-│   └── style.css               # Estilos do HUD, controles touch e modal QR Code
-├── index.html
+│   │   ├── Collision.ts              # Wall-sliding (círculo/AABB) e seleção de zonas de interação
+│   │   ├── DungeonAssets.ts          # Cache compartilhado e normalização de props CC0 das masmorras
+│   │   ├── DungeonMap.ts             # Gerador procedural 104x104, montanha cavernosa, 6 luzes e minimapa
+│   │   ├── HubMap.ts                 # Salão Real da Alvorada, portais, poeira dourada e Jardim Real
+│   │   └── ProceduralTextures.ts     # Texturas Canvas (cerâmica, mármore, ardósia, rocha e feixes de luz)
+│   ├── main.ts                       # Ponto de entrada (#game-canvas)
+│   └── style.css                     # HUD, barras de cooldown radial (--cd-deg), minimapa e controles touch
+├── index.html                        # Estrutura DOM do HUD, gradientes SVG dos botões e controles touch
 ├── package.json
 ├── tsconfig.json
-└── vite.config.ts              # Configuração Vite + plugin mobile-qr-plugin
+└── vite.config.ts                    # Configuração Vite + plugin mobile-qr-plugin (/__mobile-qr.json)
 ```
 
 </details>
@@ -106,7 +145,7 @@ game-alvorada/
 ## 🚀 Instalação e uso
 
 <details open>
-<summary><b>Pré-requisitos e configuração local</b></summary>
+<summary><b>Pré-requisitos e execução local</b></summary>
 
 Requer **Node.js** (com `npm`) instalado.
 
@@ -119,7 +158,7 @@ npm run dev
 ```
 
 Depois de iniciar com `npm run dev`:
-- **No PC:** acesse `http://localhost:5173/` (`WASD` para mover, `Shift` para correr, `Scroll` para zoom).
+- **No PC:** acesse `http://localhost:5173/`, aproxime-se do **Portal Norte** no Salão Real e pressione `F` (ou clique no botão) para entrar nas *Catacumbas Cinzentas*.
 - **No Celular:** clique em **`Jogar no Celular`** no canto superior direito (ou escaneie o QR Code no terminal) estando no mesmo Wi-Fi.
 
 </details>
@@ -141,11 +180,10 @@ npm run preview
 
 ## 🛠️ Validação e roadmap
 
-- **Checks automatizados:** `npm run build` (`tsc --noEmit && vite build`), registrado em [project.config.yml](.agents/project.config.yml). Ainda não há suíte de testes unitários ou linter configurados.
-- **Documentação técnica e histórico:** [Arquitetura do Sistema](.agents/01_system_architecture.md), [Backlog de Execução](.agents/backlog.md) e [Histórico v0.1–v0.3](planejamentos-e-instrucoes/BACKLOG.md).
-- **Próximos passos (Issues `#1` a `#5` em `.agents/backlog.md`):**
+- **Checks automatizados:** `npm run build` (`tsc --noEmit && vite build`), configurado em [project.config.yml](.agents/project.config.yml). Ainda não há suíte de testes unitários nem linter configurados.
+- **Documentação e catálogo:** [Arquitetura do Sistema](.agents/01_system_architecture.md), [Catálogo de Assets CC0](.agents/cc0_assets_catalog.md), [Backlog de Execução](.agents/backlog.md) e [Histórico Inicial](planejamentos-e-instrucoes/BACKLOG.md).
+- **Próximos passos planejados (`#1` a `#5` em `.agents/backlog.md`):**
   1. **Narrativa e Lore (`#1`):** universo, papel da Home, motivação do protagonista e origem das masmorras.
-  2. **Expansão da Home (`#2`):** NPCs (Ferreiro, Mercador) e Baú funcionais com interação contextual PC/mobile.
-  3. **Equipamentos e Inventário (`#3`):** atributos, inventário e acoplamento visual de armas/armaduras nos sockets do `.glb`.
-  4. **Combate ARPG (`#4`):** ataque básico, esquiva (`AttackCombo` / `Dodge`), dano e primeiros inimigos com IA.
-  5. **Masmorras Randômicas e Loot (`#5`):** geração procedural pelo Portal das Masmorras, iluminação sombria contrastante e drops com raridades.
+  2. **Expansão da Home (`#2`):** NPCs (Ferreiro, Mercador) e Baú Real interativos para compra, venda e armazenamento.
+  3. **Equipamentos e Inventário (`#3`):** atributos do herói e acoplamento visual dos equipamentos nos sockets reais (`head`, `chest`, `back`, `rightHand`, `leftHand`).
+  4. **Progressão de Combate e Loot (`#4`–`#5`):** ataque dos inimigos causando dano real ao jogador, coleta de moedas/poções/itens dropados por esqueletos e baús, e retorno à Home mantendo o inventário.

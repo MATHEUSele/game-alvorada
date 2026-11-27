@@ -625,16 +625,16 @@ function createDungeonStoneFloorTextures(maxAnisotropy: number): {
     for (let col = 0; col < tiles; col++) {
       const x = col * tilePx;
       const y = row * tilePx;
-      const shade = Math.floor(rng() * 18);
-      const r = 34 + shade;
-      const g = 43 + shade;
-      const b = 60 + shade + Math.floor(rng() * 8);
+      const shade = Math.floor(rng() * 22);
+      const r = 56 + shade;
+      const g = 66 + shade;
+      const b = 90 + shade + Math.floor(rng() * 8);
 
       ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       ctx.fillRect(x + 3, y + 3, tilePx - 6, tilePx - 6);
 
       // Chanfro superior esquerdo para leitura nítida da laje
-      ctx.fillStyle = 'rgba(154, 184, 232, 0.2)';
+      ctx.fillStyle = 'rgba(182, 210, 255, 0.26)';
       ctx.fillRect(x + 3, y + 3, tilePx - 6, 4);
       ctx.fillRect(x + 3, y + 3, 4, tilePx - 6);
 
@@ -695,7 +695,7 @@ function createDungeonCorridorTexture(maxAnisotropy: number): THREE.CanvasTextur
   const ctx = canvas.getContext('2d')!;
   const rng = mulberry32(4409);
 
-  ctx.fillStyle = '#181e2c';
+  ctx.fillStyle = '#242d40';
   ctx.fillRect(0, 0, size, size);
 
   const tiles = 4;
@@ -705,11 +705,11 @@ function createDungeonCorridorTexture(maxAnisotropy: number): THREE.CanvasTextur
     for (let col = 0; col < tiles; col++) {
       const x = col * tilePx;
       const y = row * tilePx;
-      const tone = Math.floor(rng() * 10);
-      ctx.fillStyle = `rgb(${29 + tone}, ${36 + tone}, ${52 + tone})`;
+      const tone = Math.floor(rng() * 14);
+      ctx.fillStyle = `rgb(${48 + tone}, ${58 + tone}, ${80 + tone})`;
       ctx.fillRect(x + 3, y + 3, tilePx - 6, tilePx - 6);
 
-      ctx.strokeStyle = 'rgba(182, 148, 86, 0.16)';
+      ctx.strokeStyle = 'rgba(206, 170, 102, 0.22)';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(x + 7, y + 7, tilePx - 14, tilePx - 14);
     }
@@ -731,7 +731,7 @@ function createDungeonWallTexture(maxAnisotropy: number): THREE.CanvasTexture {
   const ctx = canvas.getContext('2d')!;
   const rng = mulberry32(6117);
 
-  ctx.fillStyle = '#1b2232';
+  ctx.fillStyle = '#283248';
   ctx.fillRect(0, 0, size, size);
 
   const rows = 4;
@@ -746,15 +746,15 @@ function createDungeonWallTexture(maxAnisotropy: number): THREE.CanvasTexture {
       const y = r * rowH + 3;
       const w = blockW - 6;
       const h = rowH - 6;
-      const v = Math.floor(rng() * 14);
+      const v = Math.floor(rng() * 18);
 
-      ctx.fillStyle = `rgb(${44 + v}, ${52 + v}, ${70 + v})`;
+      ctx.fillStyle = `rgb(${68 + v}, ${78 + v}, ${102 + v})`;
       ctx.fillRect(x, y, w, h);
 
-      ctx.fillStyle = 'rgba(138, 162, 204, 0.14)';
+      ctx.fillStyle = 'rgba(176, 200, 240, 0.22)';
       ctx.fillRect(x, y, w, 3);
 
-      ctx.strokeStyle = 'rgba(10, 14, 24, 0.55)';
+      ctx.strokeStyle = 'rgba(14, 19, 32, 0.55)';
       ctx.lineWidth = 2;
       ctx.strokeRect(x, y, w, h);
     }

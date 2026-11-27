@@ -2,29 +2,38 @@
   <defs>
     <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#1E3A8A"/>
-      <stop offset="55%" stop-color="#312E81"/>
-      <stop offset="100%" stop-color="#0F172A"/>
+      <stop offset="52%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#581C87"/>
     </linearGradient>
     <linearGradient id="logoGold" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FDE68A"/>
-      <stop offset="55%" stop-color="#F59E0B"/>
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
       <stop offset="100%" stop-color="#D4A64A"/>
+    </linearGradient>
+    <linearGradient id="logoSlash" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.1"/>
+      <stop offset="60%" stop-color="#38BDF8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#C084FC" stop-opacity="0.95"/>
     </linearGradient>
   </defs>
 
   <!-- Margem ~10% preservada; fundo transparente -->
-  <rect x="28" y="28" width="200" height="200" rx="44" fill="url(#logoGrad)" stroke="#D4A64A" stroke-width="4" stroke-opacity="0.75"/>
+  <rect x="28" y="28" width="200" height="200" rx="44" fill="url(#logoGrad)" stroke="url(#logoGold)" stroke-width="4.5"/>
 
   <!-- Brasão real central -->
-  <path d="M128 56 L186 78 L180 142 C177 176 156 198 128 210 C100 198 79 176 76 142 L70 78 Z"
-        fill="#0F172A" fill-opacity="0.52" stroke="url(#logoGold)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M128 54 L186 76 L180 142 C177 177 156 199 128 212 C100 199 79 177 76 142 L70 76 Z"
+        fill="#0B1120" fill-opacity="0.58" stroke="url(#logoGold)" stroke-width="5" stroke-linejoin="round"/>
 
-  <!-- Espada arcana -->
-  <path d="M128 74 L137 96 L133 162 L123 162 L119 96 Z" fill="#E0F2FE"/>
-  <path d="M104 162 L152 162" stroke="url(#logoGold)" stroke-width="7" stroke-linecap="round"/>
-  <line x1="128" y1="162" x2="128" y2="188" stroke="#D4A64A" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="128" cy="192" r="5.5" fill="#FDE68A"/>
+  <!-- Rastro crescente de energia atrás da lâmina -->
+  <path d="M68 158 C102 182, 166 158, 192 94 C172 138, 118 164, 68 158 Z" fill="url(#logoSlash)"/>
+
+  <!-- Espada Dawnblade -->
+  <path d="M128 72 L138 96 L134 164 L122 164 L118 96 Z" fill="#E0F2FE"/>
+  <line x1="128" y1="88" x2="128" y2="156" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M102 164 L154 164" stroke="url(#logoGold)" stroke-width="7.5" stroke-linecap="round"/>
+  <line x1="128" y1="164" x2="128" y2="190" stroke="#D4A64A" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="128" cy="194" r="5.5" fill="#FDE68A"/>
 
   <!-- Estrela da Alvorada -->
-  <polygon points="128,60 132,70 142,74 132,78 128,88 124,78 114,74 124,70" fill="#FDE68A"/>
+  <polygon points="128,58 132,68 142,72 132,76 128,86 124,76 114,72 124,68" fill="#FDE68A"/>
 </svg>

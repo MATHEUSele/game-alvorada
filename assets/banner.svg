@@ -1,57 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Game Alvorada — Santuário Cinzento">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Game Alvorada — Santuário Cinzento">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="48%" stop-color="#1E3A8A"/>
-      <stop offset="100%" stop-color="#312E81"/>
+      <stop offset="0%" stop-color="#0B1120"/>
+      <stop offset="42%" stop-color="#1E3A8A"/>
+      <stop offset="76%" stop-color="#3B0764"/>
+      <stop offset="100%" stop-color="#581C87"/>
     </linearGradient>
     <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#1E3A8A" stop-opacity="0.22"/>
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#A855F7" stop-opacity="0.20"/>
     </linearGradient>
     <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FDE68A"/>
-      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="45%" stop-color="#F59E0B"/>
       <stop offset="100%" stop-color="#D4A64A"/>
     </linearGradient>
+    <linearGradient id="slashGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.05"/>
+      <stop offset="55%" stop-color="#38BDF8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#FDE68A" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="abyssGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#581C87" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#0B1120" stop-opacity="0"/>
+    </radialGradient>
     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
       <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FDE68A" stroke-opacity="0.06" stroke-width="1"/>
     </pattern>
   </defs>
 
-  <rect width="1200" height="300" rx="18" fill="url(#bgGrad)"/>
-  <rect width="1200" height="300" rx="18" fill="url(#grid)"/>
+  <rect width="1200" height="320" rx="18" fill="url(#bgGrad)"/>
+  <rect width="1200" height="320" rx="18" fill="url(#grid)"/>
 
-  <!-- Brilhos solares dourados -->
-  <circle cx="1040" cy="56" r="190" fill="#F59E0B" fill-opacity="0.16"/>
-  <circle cx="154" cy="260" r="145" fill="#60A5FA" fill-opacity="0.14"/>
+  <!-- Brilho solar dourado da Home (esquerda) vs Aura Violeta Abissal das Masmorras (direita) -->
+  <circle cx="170" cy="48" r="190" fill="#F59E0B" fill-opacity="0.14"/>
+  <circle cx="1065" cy="160" r="185" fill="url(#abyssGlow)"/>
 
-  <!-- Emblema à esquerda: Brasão Real + Espada Arcana + Estrela da Alvorada -->
-  <rect x="76" y="72" width="156" height="156" rx="28" fill="url(#cardGrad)" stroke="#D4A64A" stroke-opacity="0.65" stroke-width="2"/>
-  <path d="M154 96 L196 112 L192 158 C190 184 174 202 154 212 C134 202 118 184 116 158 L112 112 Z"
-        fill="#0F172A" fill-opacity="0.55" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linejoin="round"/>
-  <!-- Lâmina da espada arcana -->
-  <path d="M154 108 L161 124 L158 176 L150 176 L147 124 Z" fill="#E0F2FE"/>
-  <!-- Guarda e pomo dourados -->
-  <path d="M136 176 L172 176" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round"/>
-  <line x1="154" y1="176" x2="154" y2="196" stroke="#D4A64A" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="154" cy="199" r="4" fill="#FDE68A"/>
-  <!-- Estrela da alvorada no topo da espada -->
-  <polygon points="154,99 157,106 164,109 157,112 154,119 151,112 144,109 151,106" fill="#FDE68A"/>
+  <!-- Ilustração geométrica sutil do Portal / Fenda Abissal à direita -->
+  <g transform="translate(1065 160)" opacity="0.88">
+    <ellipse cx="0" cy="78" rx="68" ry="14" fill="#0B1120" fill-opacity="0.55" stroke="#D4A64A" stroke-opacity="0.45" stroke-width="1.5"/>
+    <circle cx="0" cy="-4" r="64" fill="none" stroke="#A855F7" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="10 6"/>
+    <circle cx="0" cy="-4" r="46" fill="#3B0764" fill-opacity="0.45" stroke="#38BDF8" stroke-opacity="0.65" stroke-width="2.5"/>
+    <circle cx="0" cy="-4" r="24" fill="#A855F7" fill-opacity="0.32" stroke="#FDE68A" stroke-opacity="0.7" stroke-width="1.5"/>
+    <polygon points="0,-24 6,-9 21,-4 6,1 0,16 -6,1 -21,-4 -6,-9" fill="#FDE68A" fill-opacity="0.9"/>
+    <circle cx="-54" cy="-44" r="2.5" fill="#FDE68A"/>
+    <circle cx="52" cy="-36" r="2" fill="#38BDF8"/>
+    <circle cx="44" cy="42" r="2.5" fill="#D8B4FE"/>
+    <circle cx="-48" cy="36" r="2" fill="#FDE68A"/>
+  </g>
+
+  <!-- Emblema à esquerda: Brasão Real + Rastro Dawnblade + Estrela da Alvorada -->
+  <rect x="64" y="80" width="160" height="160" rx="30" fill="url(#cardGrad)" stroke="#D4A64A" stroke-opacity="0.72" stroke-width="2"/>
+  <path d="M144 102 L188 119 L184 166 C181 194 165 213 144 224 C123 213 107 194 104 166 L100 119 Z"
+        fill="#0B1120" fill-opacity="0.62" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- Rastro crescente estilo corte da Dawnblade -->
+  <path d="M98 182 C122 198, 174 180, 194 128 C176 164, 134 184, 98 182 Z" fill="url(#slashGrad)"/>
+  <!-- Lâmina da Dawnblade -->
+  <path d="M144 114 L152 132 L149 186 L139 186 L136 132 Z" fill="#E0F2FE"/>
+  <line x1="144" y1="126" x2="144" y2="180" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+  <path d="M124 186 L164 186" stroke="url(#goldGrad)" stroke-width="5.5" stroke-linecap="round"/>
+  <line x1="144" y1="186" x2="144" y2="207" stroke="#D4A64A" stroke-width="4.2" stroke-linecap="round"/>
+  <circle cx="144" cy="211" r="4.5" fill="#FDE68A"/>
+  <!-- Estrela da Alvorada -->
+  <polygon points="144,104 147,112 155,115 147,118 144,126 141,118 133,115 141,112" fill="#FDE68A"/>
 
   <!-- Título e subtítulo -->
-  <text x="268" y="132" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="56" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5">Game Alvorada</text>
-  <text x="270" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="400" fill="#FDE68A">Santuário Cinzento — Action RPG Isométrico 3D no Navegador</text>
+  <text x="256" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="56" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5">Game Alvorada</text>
+  <text x="258" y="178" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#FDE68A">Santuário Cinzento — Action RPG Isométrico 3D • Salão Real &amp; Masmorras</text>
 
-  <!-- Pills / tags com largura folgada -->
-  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="600">
-    <rect x="270" y="202" width="160" height="30" rx="15" fill="#0F172A" fill-opacity="0.55" stroke="#93C5FD" stroke-opacity="0.45"/>
-    <text x="350" y="222" text-anchor="middle" fill="#DBEAFE">Three.js + TS</text>
+  <!-- 4 Pills com larguras folgadas -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="600">
+    <rect x="258" y="206" width="196" height="32" rx="16" fill="#0B1120" fill-opacity="0.62" stroke="#93C5FD" stroke-opacity="0.5"/>
+    <text x="356" y="227" text-anchor="middle" fill="#DBEAFE">Three.js + TypeScript</text>
 
-    <rect x="442" y="202" width="180" height="30" rx="15" fill="#0F172A" fill-opacity="0.55" stroke="#FCD34D" stroke-opacity="0.5"/>
-    <text x="532" y="222" text-anchor="middle" fill="#FDE68A">PC + Celular QR</text>
+    <rect x="466" y="206" width="192" height="32" rx="16" fill="#0B1120" fill-opacity="0.62" stroke="#FCD34D" stroke-opacity="0.55"/>
+    <text x="562" y="227" text-anchor="middle" fill="#FDE68A">4 Poderes Dawnblade</text>
 
-    <rect x="634" y="202" width="170" height="30" rx="15" fill="#0F172A" fill-opacity="0.55" stroke="#6EE7B7" stroke-opacity="0.45"/>
-    <text x="719" y="222" text-anchor="middle" fill="#A7F3D0">Blender GLB 3D</text>
+    <rect x="670" y="206" width="184" height="32" rx="16" fill="#0B1120" fill-opacity="0.62" stroke="#C084FC" stroke-opacity="0.55"/>
+    <text x="762" y="227" text-anchor="middle" fill="#E9D5FF">Masmorras 104x104</text>
+
+    <rect x="866" y="206" width="164" height="32" rx="16" fill="#0B1120" fill-opacity="0.62" stroke="#6EE7B7" stroke-opacity="0.5"/>
+    <text x="948" y="227" text-anchor="middle" fill="#A7F3D0">PC + Celular QR</text>
   </g>
 </svg>

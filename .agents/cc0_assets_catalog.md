@@ -29,7 +29,17 @@ Todos os modelos abaixo são **CC0 1.0 Universal (Domínio Público)** — uso l
 | `public/models/characters/npc_knight.glb` | Quaternius (`single_knight_pack`) | NPC Guarda / Ferreiro / Mercador da Home |
 | `public/models/characters/enemy_spider.glb` | Quaternius (`easy_enemies_pack`) | Inimigo Aranha para masmorras iniciais |
 | `public/models/characters/enemy_rat.glb` | Quaternius (`easy_enemies_pack`) | Inimigo Rato de catacumba |
-| `public/models/characters/enemy_skeleton_minion.glb` | KayKit (`Skeletons 1.0`) | Inimigo Esqueleto rigado para masmorras |
+| `public/models/characters/enemy_skeleton_minion.glb` | KayKit (`Skeletons 1.0`) | Inimigo Esqueleto Lacaio ativo nas masmorras (`minion`) |
+| `public/models/characters/enemy_skeleton_warrior.glb` | KayKit (`Skeletons 1.0`) | Inimigo Esqueleto Guerreiro e Campeão do Santuário |
+| `public/models/characters/enemy_skeleton_rogue.glb` | KayKit (`Skeletons 1.0`) | Inimigo Esqueleto Ladino ágil com adagas duplas |
+
+### Armas de Inimigos (`public/models/items/`)
+| Arquivo local | Origem / Autor | Uso ativo nos esqueletos |
+|---|---|---|
+| `public/models/items/sword_skeleton.glb` | Quaternius (`medieval_weapons_pack`) | Espada equipada em `enemy_skeleton_minion` |
+| `public/models/items/axe_skeleton.glb` | Quaternius (`medieval_weapons_pack`) | Machado duplo equipado em `warrior`/`champion` |
+| `public/models/items/dagger_skeleton.glb` | Quaternius (`medieval_weapons_pack`) | Adagas duplas equipadas em `enemy_skeleton_rogue` |
+| `public/models/items/shield_skeleton.glb` | Quaternius (`medieval_weapons_pack`) | Escudo redondo equipado em `warrior`/`champion` |
 
 ### Masmorra, Arquitetura e Montanha Subterrânea (`public/models/dungeon/`)
 | Arquivo local | Origem / Autor | Uso ativo nas masmorras |

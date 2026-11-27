@@ -135,6 +135,30 @@ export interface SkillRuntimeState {
   active: boolean;
 }
 
+export interface PlayerAttackHitbox {
+  id: number;
+  type: 'arc' | 'circle';
+  originX: number;
+  originZ: number;
+  dirX: number;
+  dirZ: number;
+  radius: number;
+  minDot: number;
+  damage: number;
+  knockback: number;
+}
+
+interface ScheduledAttackPulse {
+  delay: number;
+  id: number;
+  type: 'arc' | 'circle';
+  forwardOffset: number;
+  radius: number;
+  minDot: number;
+  damage: number;
+  knockback: number;
+}
+
 interface SplitActionPair {
   upper: THREE.AnimationAction;
   lower: THREE.AnimationAction;
@@ -182,6 +206,11 @@ export class Player {
   private dashTimer = 0;
   private dashSpeed = 0;
   private readonly dashDir = new THREE.Vector3();
+
+  private nextAttackId = 1;
+  private thrustAttackId = 0;
+  private readonly pendingHitboxes: PlayerAttackHitbox[] = [];
+  private readonly scheduledPulses: ScheduledAttackPulse[] = [];
 
   private idleWeightUpper = 1;
   private walkWeightUpper = 0;
@@ -467,6 +496,9 @@ export class Player {
       this.dashDir.set(fwdX, 0, fwdZ);
       this.dashSpeed = meta.dashSpeed;
       this.dashTimer = meta.dashDuration;
+      if (slot === 'thrust') {
+        this.thrustAttackId = this.nextAttackId++;
+      }
     } else if (meta.lungeSpeed > 0 && currentSpeed < 1.2) {
       // Aplica passo curto à frente apenas quando ataca quase parado (em corrida as pernas correm livres)
       const bonus = comboStepForVfx === 3 ? 1.45 : 1.0;
@@ -474,7 +506,54 @@ export class Player {
       this.velocity.z += fwdZ * meta.lungeSpeed * bonus;
     }
 
+    if (slot === 'slash') {
+      const dmg = comboStepForVfx === 3 ? 64 : comboStepForVfx === 2 ? 42 : 38;
+      const rad = comboStepForVfx === 3 ? 3.05 : 2.65;
+      const kb = comboStepForVfx === 3 ? 8.5 : 5.5;
+      this.pendingHitboxes.push({
+        id: this.nextAttackId++,
+        type: 'arc',
+        originX: this.group.position.x,
+        originZ: this.group.position.z,
+        dirX: fwdX,
+        dirZ: fwdZ,
+        radius: rad,
+        minDot: -0.25,
+        damage: dmg,
+        knockback: kb,
+      });
+    } else if (slot === 'spin') {
+      for (const delay of [0.06, 0.38, 0.72]) {
+        this.scheduledPulses.push({
+          delay,
+          id: this.nextAttackId++,
+          type: 'circle',
+          forwardOffset: 0,
+          radius: 2.75,
+          minDot: -1,
+          damage: 32,
+          knockback: 4.2,
+        });
+      }
+    } else if (slot === 'ult') {
+      this.scheduledPulses.push({
+        delay: 0.68,
+        id: this.nextAttackId++,
+        type: 'circle',
+        forwardOffset: 0.72,
+        radius: 4.3,
+        minDot: -1,
+        damage: 125,
+        knockback: 12.0,
+      });
+    }
+
     return true;
+  }
+
+  public consumeAttackHitboxes(): PlayerAttackHitbox[] {
+    if (this.pendingHitboxes.length === 0) return [];
+    return this.pendingHitboxes.splice(0, this.pendingHitboxes.length);
   }
 
   public getSkillState(slot: SwordSkillSlot): SkillRuntimeState {
@@ -502,6 +581,9 @@ export class Player {
     this.targetVelocity.set(0, 0, 0);
     this.dashTimer = 0;
     this.dashSpeed = 0;
+    this.thrustAttackId = 0;
+    this.pendingHitboxes.length = 0;
+    this.scheduledPulses.length = 0;
     this.bodyPivot.rotation.set(0, yaw, 0);
   }
 
@@ -594,6 +676,45 @@ export class Player {
       this.dashTimer = Math.max(0, this.dashTimer - dt);
       this.group.position.x += this.dashDir.x * this.dashSpeed * dt;
       this.group.position.z += this.dashDir.z * this.dashSpeed * dt;
+      if (this.activeSkillSlot === 'thrust' && this.thrustAttackId > 0) {
+        this.pendingHitboxes.push({
+          id: this.thrustAttackId,
+          type: 'circle',
+          originX: this.group.position.x,
+          originZ: this.group.position.z,
+          dirX: this.dashDir.x,
+          dirZ: this.dashDir.z,
+          radius: 1.85,
+          minDot: -1,
+          damage: 58,
+          knockback: 9.0,
+        });
+      }
+    } else {
+      this.thrustAttackId = 0;
+    }
+
+    for (let i = this.scheduledPulses.length - 1; i >= 0; i--) {
+      const pulse = this.scheduledPulses[i];
+      pulse.delay -= dt;
+      if (pulse.delay <= 0) {
+        const pyaw = this.bodyPivot.rotation.y;
+        const pFwdX = Math.sin(pyaw);
+        const pFwdZ = Math.cos(pyaw);
+        this.pendingHitboxes.push({
+          id: pulse.id,
+          type: pulse.type,
+          originX: this.group.position.x + pFwdX * pulse.forwardOffset,
+          originZ: this.group.position.z + pFwdZ * pulse.forwardOffset,
+          dirX: pFwdX,
+          dirZ: pFwdZ,
+          radius: pulse.radius,
+          minDot: pulse.minDot,
+          damage: pulse.damage,
+          knockback: pulse.knockback,
+        });
+        this.scheduledPulses.splice(i, 1);
+      }
     }
 
     const speed = this.velocity.length();

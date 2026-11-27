@@ -1,8 +1,11 @@
 import * as THREE from 'three';
 import { IsometricCamera } from '../camera/IsometricCamera';
 import { Player, type SwordSkillSlot } from '../entities/Player';
+import { skeletonAssetLibrary } from '../entities/SkeletonEnemy';
 import {
   resolveCollisions,
+  type BoxCollider,
+  type CircleCollider,
   type InteractionPrompt,
 } from '../world/Collision';
 import { DungeonMap } from '../world/DungeonMap';
@@ -22,6 +25,8 @@ interface SkillButtonRefs {
   timerText: HTMLElement | null;
 }
 
+const EMPTY_BOX_COLLIDERS: readonly BoxCollider[] = [];
+
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene: THREE.Scene;
@@ -35,8 +40,8 @@ export class Game {
 
   private readonly hubBgColor = new THREE.Color('#cde0f5');
   private readonly hubFogColor = new THREE.Color('#d7e6f5');
-  private readonly dungeonBgColor = new THREE.Color('#070b14');
-  private readonly dungeonFogColor = new THREE.Color('#0b1222');
+  private readonly dungeonBgColor = new THREE.Color('#0f182b');
+  private readonly dungeonFogColor = new THREE.Color('#16233d');
 
   private dungeonTextures: DungeonTextureSet | null = null;
   private dungeonMap: DungeonMap | null = null;
@@ -183,8 +188,8 @@ export class Game {
       this.scene.add(nextMap.group);
       (this.scene.background as THREE.Color).copy(this.dungeonBgColor);
       this.sceneFog.color.copy(this.dungeonFogColor);
-      this.sceneFog.density = 0.0078;
-      this.renderer.toneMappingExposure = 1.18;
+      this.sceneFog.density = 0.0046;
+      this.renderer.toneMappingExposure = 1.34;
 
       document.body.classList.add('in-dungeon');
       this.minimapCanvas?.classList.remove('hidden');
@@ -293,6 +298,19 @@ export class Game {
         activeMap.boxColliders,
         activeMap.boundsRadius,
       );
+      if (this.activeLocation === 'dungeon' && this.dungeonMap) {
+        const enemyCircles: readonly CircleCollider[] =
+          this.dungeonMap.getAliveEnemyColliders();
+        if (enemyCircles.length > 0) {
+          resolveCollisions(
+            pos,
+            this.player.radius,
+            enemyCircles,
+            EMPTY_BOX_COLLIDERS,
+            activeMap.boundsRadius,
+          );
+        }
+      }
       this.player.group.position.x = pos.x;
       this.player.group.position.z = pos.z;
     }
@@ -302,7 +320,19 @@ export class Game {
       this.input.getZoomTarget(),
       dt,
     );
-    activeMap.update(dt, this.elapsed, this.player.group.position);
+
+    const hitboxes = this.player.consumeAttackHitboxes();
+    if (this.activeLocation === 'dungeon' && this.dungeonMap) {
+      this.dungeonMap.applyPlayerHitboxes(hitboxes);
+      this.dungeonMap.update(
+        dt,
+        this.elapsed,
+        this.player.group.position,
+        this.isoCamera.camera.quaternion,
+      );
+    } else {
+      this.hubMap.update(dt, this.elapsed, this.player.group.position);
+    }
 
     const nearbyPrompt = activeMap.getNearbyInteractionPrompt(
       this.player.group.position,
@@ -420,6 +450,7 @@ export class Game {
       this.dungeonTextures = null;
     }
     dungeonAssetLibrary.dispose();
+    skeletonAssetLibrary.dispose();
 
     window.removeEventListener('resize', this.onResize);
     this.returnHubBtn?.removeEventListener('click', this.onReturnHubClick);

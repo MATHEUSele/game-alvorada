@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 340" width="820" height="340" role="img" aria-label="game-alvorada — vite dev e build">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 380" width="860" height="380" role="img" aria-label="game-alvorada — vite dev, build e masmorra">
   <style>
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; }
     .cmd { fill: #E2E8F0; font-weight: 700; }
     .prompt { fill: #38BDF8; font-weight: 700; }
     .muted { fill: #94A3B8; }
     .ok { fill: #34D399; font-weight: 600; }
     .warn { fill: #FBBF24; font-weight: 600; }
     .accent { fill: #FDE68A; font-weight: 600; }
+    .abyss { fill: #D8B4FE; font-weight: 600; }
 
     @keyframes step1 { 0%, 4% { opacity: 0; } 8%, 92% { opacity: 1; } 97%, 100% { opacity: 0; } }
     @keyframes step2 { 0%, 16% { opacity: 0; } 20%, 92% { opacity: 1; } 97%, 100% { opacity: 0; } }
@@ -26,22 +27,22 @@
   </style>
 
   <!-- Janela de terminal escura -->
-  <rect width="820" height="340" rx="14" fill="#0F172A" stroke="#334155" stroke-width="1.5"/>
-  <path d="M0 14 Q0 0 14 0 L806 0 Q820 0 820 14 L820 40 L0 40 Z" fill="#1E293B"/>
+  <rect width="860" height="380" rx="14" fill="#0B1120" stroke="#334155" stroke-width="1.5"/>
+  <path d="M0 14 Q0 0 14 0 L846 0 Q860 0 860 14 L860 40 L0 40 Z" fill="#1E293B"/>
 
   <!-- 3 bolinhas da barra superior -->
   <circle cx="24" cy="20" r="6" fill="#EF4444"/>
   <circle cx="44" cy="20" r="6" fill="#F59E0B"/>
   <circle cx="64" cy="20" r="6" fill="#10B981"/>
-  <text x="410" y="25" text-anchor="middle" class="mono muted" font-size="12">game-alvorada — vite dev &amp; build</text>
+  <text x="430" y="25" text-anchor="middle" class="mono muted">game-alvorada — runtime, build &amp; catacumbas</text>
 
   <!-- Bloco 1 -->
   <g class="s1">
     <text x="26" y="74" class="mono"><tspan class="prompt">❯ </tspan><tspan class="cmd">npm run dev</tspan></text>
   </g>
   <g class="s2">
-    <text x="44" y="98" class="mono accent">VITE v6.4.6 ready • Local: http://localhost:5173/</text>
-    <text x="44" y="120" class="mono muted">QR Code mobile ativo em /__mobile-qr.json (analógico 360° + correr)</text>
+    <text x="44" y="98" class="mono accent">VITE v6.4.6 ready • PC: http://localhost:5173/</text>
+    <text x="44" y="120" class="mono muted">Mobile QR: /__mobile-qr.json (analógico 360° + cluster MOBA)</text>
   </g>
 
   <!-- Bloco 2 -->
@@ -49,16 +50,17 @@
     <text x="26" y="158" class="mono"><tspan class="prompt">❯ </tspan><tspan class="cmd">npm run build</tspan></text>
   </g>
   <g class="s4">
-    <text x="44" y="182" class="mono muted">tsc --noEmit &amp;&amp; vite build — 16 modules transformed</text>
-    <text x="44" y="204" class="mono ok">✓ dist/ gerado • protagonist.glb (22 ossos, 5 animações)</text>
+    <text x="44" y="182" class="mono ok">✓ tsc --noEmit &amp;&amp; vite build — 21 modules transformed (dist/ gerado)</text>
+    <text x="44" y="204" class="mono muted">✓ protagonist.glb (23 ossos, 10 animações) + 39 modelos CC0 (.glb)</text>
   </g>
 
   <!-- Bloco 3 -->
   <g class="s5">
-    <text x="26" y="242" class="mono"><tspan class="prompt">❯ </tspan><tspan class="cmd">/backlog</tspan></text>
+    <text x="26" y="242" class="mono"><tspan class="prompt">❯ </tspan><tspan class="cmd">[Portal Norte → F] Entrar na Masmorra</tspan></text>
   </g>
   <g class="s6">
-    <text x="44" y="266" class="mono ok">✓ 5 Issues • 12 BACKs prontas em .agents/backlog.md</text>
-    <text x="26" y="302" class="mono"><tspan class="prompt">❯ </tspan><tspan class="warn">Salão Real da Alvorada pronto para jogar! </tspan><tspan class="cursor prompt">█</tspan></text>
+    <text x="44" y="266" class="mono abyss">✓ Catacumbas Cinzentas • Grade 104x104 • 6–8 salas + Esqueletos IA</text>
+    <text x="44" y="288" class="mono muted">✓ Montanha subterrânea • 6 luzes dinâmicas • Minimapa isométrico</text>
+    <text x="26" y="330" class="mono"><tspan class="prompt">❯ </tspan><tspan class="warn">Dawnblade: Corte [1/J] • Giro 360° [2/Q] • Investida [3/E] • ULT [4/R] </tspan><tspan class="cursor prompt">█</tspan></text>
   </g>
 </svg>

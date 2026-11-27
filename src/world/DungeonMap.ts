@@ -1,5 +1,11 @@
 /// <reference types="vite/client" />
 import * as THREE from 'three';
+import type { PlayerAttackHitbox } from '../entities/Player';
+import {
+  SkeletonEnemy,
+  skeletonAssetLibrary,
+  type SkeletonArchetype,
+} from '../entities/SkeletonEnemy';
 import {
   findNearbyInteraction,
   type BoxCollider,
@@ -55,7 +61,7 @@ export interface DungeonLayout {
   spawnYaw: number;
 }
 
-const GRID_SIZE = 48;
+const GRID_SIZE = 104;
 const CELL_SIZE = 2.4;
 
 const CELL_EMPTY = 0;
@@ -91,11 +97,11 @@ function canPlaceRoom(
   h: number,
   rooms: readonly DungeonRoom[],
 ): boolean {
-  if (gx < 2 || gz < 2 || gx + w > GRID_SIZE - 2 || gz + h > GRID_SIZE - 2) {
+  if (gx < 3 || gz < 3 || gx + w > GRID_SIZE - 3 || gz + h > GRID_SIZE - 3) {
     return false;
   }
 
-  const margin = 2;
+  const margin = 3;
   for (let i = 0; i < rooms.length; i++) {
     const r = rooms[i];
     const separated =
@@ -147,8 +153,8 @@ function gridToWorldZ(gz: number, originGz: number): number {
 }
 
 /**
- * Gera um layout randômico conectado em grade 48x48 com salas, corredores de 2 células
- * e paredes fundidas (greedy 2D) com recorte cutaway para câmera isométrica.
+ * Gera um layout randômico conectado em grade 104x104 com salas amplas (8..11 células),
+ * corredores largos de 3 células e paredes fundidas (greedy 2D) com recorte cutaway.
  */
 export function generateDungeonLayout(
   rawSeed: number = (Math.random() * 0xffffffff) >>> 0,
@@ -173,10 +179,10 @@ function tryGenerateLayout(
   const rng = mulberry32(seed);
   const grid = new Uint8Array(GRID_SIZE * GRID_SIZE);
 
-  const startW = 5;
-  const startH = 5;
-  const startGx = 21;
-  const startGz = 21;
+  const startW = 8;
+  const startH = 8;
+  const startGx = 48;
+  const startGz = 48;
   const originGx = startGx + startW * 0.5;
   const originGz = startGz + startH * 0.5;
 
@@ -196,7 +202,7 @@ function tryGenerateLayout(
   carveRect(grid, startGx, startGz, startW, startH, CELL_ROOM);
 
   const corridors: DungeonCorridor[] = [];
-  const targetRooms = 6 + Math.floor(rng() * 3); // 6 a 8 salas
+  const targetRooms = 6 + Math.floor(rng() * 3); // 6 a 8 salas amplas
   const dirs: ReadonlyArray<[number, number]> = [
     [1, 0],
     [-1, 0],
@@ -210,22 +216,22 @@ function tryGenerateLayout(
   ): boolean => {
     const dirList = deterministic ? dirs : shuffled(dirs, rng);
     const gapCandidates = deterministic
-      ? [2, 3, 4]
-      : [2 + Math.floor(rng() * 3), 2, 3, 4];
+      ? [3, 4, 5]
+      : [3 + Math.floor(rng() * 3), 3, 4, 5];
     const sizePairs: Array<[number, number]> = deterministic
       ? [
-          [5, 5],
-          [4, 4],
+          [8, 8],
+          [7, 7],
         ]
       : [
-          [4 + Math.floor(rng() * 3), 4 + Math.floor(rng() * 3)],
-          [5, 4],
-          [4, 5],
-          [4, 4],
+          [8 + Math.floor(rng() * 4), 8 + Math.floor(rng() * 4)],
+          [9, 8],
+          [8, 9],
+          [8, 8],
         ];
     const offsetCandidates = deterministic
       ? [0]
-      : shuffled([-1, 0, 1], rng);
+      : shuffled([-2, -1, 0, 1, 2], rng);
 
     for (const [dx, dz] of dirList) {
       for (const gap of gapCandidates) {
@@ -246,14 +252,14 @@ function tryGenerateLayout(
 
               const overlapMin = Math.max(parent.gz, cgz);
               const overlapMax = Math.min(parent.gz + parent.h, cgz + ch);
-              if (overlapMax - overlapMin < 2) continue;
+              if (overlapMax - overlapMin < 3) continue;
 
               const corStartZ =
-                overlapMin + Math.floor((overlapMax - overlapMin - 2) / 2);
+                overlapMin + Math.floor((overlapMax - overlapMin - 3) / 2);
               corGx = dx > 0 ? parent.gx + parent.w : cgx + cw;
               corGz = corStartZ;
               corW = gap;
-              corH = 2;
+              corH = 3;
             } else {
               cgz = dz > 0 ? parent.gz + parent.h + gap : parent.gz - gap - ch;
               const idealX =
@@ -262,13 +268,13 @@ function tryGenerateLayout(
 
               const overlapMin = Math.max(parent.gx, cgx);
               const overlapMax = Math.min(parent.gx + parent.w, cgx + cw);
-              if (overlapMax - overlapMin < 2) continue;
+              if (overlapMax - overlapMin < 3) continue;
 
               const corStartX =
-                overlapMin + Math.floor((overlapMax - overlapMin - 2) / 2);
+                overlapMin + Math.floor((overlapMax - overlapMin - 3) / 2);
               corGx = corStartX;
               corGz = dz > 0 ? parent.gz + parent.h : cgz + ch;
-              corW = 2;
+              corW = 3;
               corH = gap;
             }
 
@@ -308,7 +314,7 @@ function tryGenerateLayout(
     return false;
   };
 
-  for (let step = 0; step < 32 && rooms.length < targetRooms; step++) {
+  for (let step = 0; step < 36 && rooms.length < targetRooms; step++) {
     let added = false;
 
     if (step < 4) {
@@ -506,11 +512,21 @@ interface MistLayer {
   speedZ: number;
 }
 
+interface HitSpark {
+  mesh: THREE.Mesh;
+  velX: number;
+  velY: number;
+  velZ: number;
+  life: number;
+  maxLife: number;
+}
+
 export class DungeonMap {
   public readonly group = new THREE.Group();
   public readonly circleColliders: CircleCollider[] = [];
   public readonly boxColliders: BoxCollider[] = [];
   public readonly boundsRadius = 500;
+  public readonly enemies: SkeletonEnemy[] = [];
 
   public readonly floorNumber: number;
   public readonly seed: number;
@@ -529,7 +545,13 @@ export class DungeonMap {
   private readonly torchLightPool: THREE.PointLight[] = [];
   private readonly mistLayers: MistLayer[] = [];
 
-  private readonly emberCount = 180;
+  private readonly enemyHitIds = new Map<number, Set<number>>();
+  private readonly enemyColliderBuffer: CircleCollider[] = [];
+  private readonly hitSparks: HitSpark[] = [];
+  private readonly sparkGeo: THREE.BufferGeometry;
+  private readonly sparkMat: THREE.MeshBasicMaterial;
+
+  private readonly emberCount = 190;
   private emberPoints!: THREE.Points;
   private emberPositions!: Float32Array;
   private emberSeeds!: Float32Array;
@@ -556,6 +578,15 @@ export class DungeonMap {
     this.roomCount = this.layout.rooms.length;
     this.spawnYaw = this.layout.spawnYaw;
 
+    this.sparkGeo = this.trackGeo(new THREE.OctahedronGeometry(0.11, 0));
+    this.sparkMat = this.trackMat(
+      new THREE.MeshBasicMaterial({
+        color: '#fde68a',
+        transparent: true,
+        opacity: 0.95,
+      }),
+    );
+
     dungeonAssetLibrary.preload([
       'pillar_decorated',
       'torch_mounted',
@@ -574,6 +605,7 @@ export class DungeonMap {
       'mountain_group_1',
       'mountain_group_2',
     ]);
+    skeletonAssetLibrary.preloadAll();
 
     this.computeWorldBounds();
     this.keyLight = this.buildLighting();
@@ -581,6 +613,7 @@ export class DungeonMap {
     this.buildSubterraneanFoundations();
     this.buildMountainCavernBackdrop(textures);
     this.buildFeaturesAndProps();
+    this.buildSkeletonEnemies();
     this.buildSubterraneanLightShafts(textures);
     this.buildEmberParticles();
   }
@@ -624,18 +657,17 @@ export class DungeonMap {
   }
 
   private buildLighting(): THREE.DirectionalLight {
-    // Luz ambiente equilibrada: céu frio cavernoso + rebatimento quente-ameixa
-    const hemi = new THREE.HemisphereLight('#5e82c8', '#261b30', 0.8);
+    // Iluminação clara e legível mantendo a paleta fria x âmbar subterrânea
+    const hemi = new THREE.HemisphereLight('#9ec0ff', '#4b3d63', 1.38);
     this.group.add(hemi);
 
-    // Key light fria com sombras nítidas seguindo o jogador
-    const keyLight = new THREE.DirectionalLight('#9ac0ff', 1.32);
-    keyLight.position.set(16, 20, -12);
+    const keyLight = new THREE.DirectionalLight('#cfe2ff', 1.95);
+    keyLight.position.set(18, 24, -14);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(2048, 2048);
     keyLight.shadow.camera.near = 2;
-    keyLight.shadow.camera.far = 75;
-    const d = 24;
+    keyLight.shadow.camera.far = 85;
+    const d = 32;
     keyLight.shadow.camera.left = -d;
     keyLight.shadow.camera.right = d;
     keyLight.shadow.camera.top = d;
@@ -644,14 +676,13 @@ export class DungeonMap {
     this.group.add(keyLight);
     this.group.add(keyLight.target);
 
-    // Rim light subterrânea vinda do abismo para recortar penhascos e fundações
-    const rimLight = new THREE.DirectionalLight('#4c3a78', 0.45);
+    const rimLight = new THREE.DirectionalLight('#7c68b8', 0.72);
     rimLight.position.set(-18, -8, 18);
     this.group.add(rimLight);
 
-    // Pool dinâmico de 5 PointLights de fogo seguindo as tochas/braseiros mais próximos
-    for (let i = 0; i < 5; i++) {
-      const torchLight = new THREE.PointLight('#ff9642', 0, 14.0, 1.55);
+    // Pool dinâmico de 6 PointLights quentes seguindo as tochas/braseiros mais próximos
+    for (let i = 0; i < 6; i++) {
+      const torchLight = new THREE.PointLight('#ffac5c', 0, 19.5, 1.4);
       torchLight.position.set(0, -50, 0);
       this.group.add(torchLight);
       this.torchLightPool.push(torchLight);
@@ -664,25 +695,25 @@ export class DungeonMap {
     const stoneWallMat = this.trackMat(
       new THREE.MeshStandardMaterial({
         map: textures.stoneWallMap,
-        color: '#8898b8',
-        roughness: 0.72,
-        metalness: 0.12,
+        color: '#b0c0de',
+        roughness: 0.68,
+        metalness: 0.1,
       }),
     );
 
     const lowWallTrimMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#2b3449',
-        roughness: 0.56,
-        metalness: 0.22,
+        color: '#3d4b69',
+        roughness: 0.54,
+        metalness: 0.2,
       }),
     );
 
     const darkGoldMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#a37b36',
-        roughness: 0.35,
-        metalness: 0.78,
+        color: '#c4963f',
+        roughness: 0.32,
+        metalness: 0.8,
       }),
     );
 
@@ -704,8 +735,8 @@ export class DungeonMap {
           map: floorMap,
           bumpMap: floorBump,
           bumpScale: 0.045,
-          roughness: 0.62,
-          metalness: 0.1,
+          roughness: 0.58,
+          metalness: 0.08,
         }),
       );
 
@@ -718,7 +749,7 @@ export class DungeonMap {
       const trimGeo = this.trackGeo(
         new THREE.RingGeometry(
           Math.min(worldW, worldH) * 0.42,
-          Math.min(worldW, worldH) * 0.44,
+          Math.min(worldW, worldH) * 0.436,
           room.kind === 'sanctum' ? 8 : 4,
         ),
       );
@@ -726,12 +757,12 @@ export class DungeonMap {
         new THREE.MeshBasicMaterial({
           color:
             room.kind === 'sanctum'
-              ? '#9b5de5'
+              ? '#b782f6'
               : room.kind === 'treasure'
-                ? '#c7973c'
-                : '#3f5f94',
+                ? '#e0af4c'
+                : '#5782c4',
           transparent: true,
-          opacity: 0.24,
+          opacity: 0.26,
           depthWrite: false,
         }),
       );
@@ -753,8 +784,8 @@ export class DungeonMap {
       const corMat = this.trackMat(
         new THREE.MeshStandardMaterial({
           map: corMap,
-          roughness: 0.68,
-          metalness: 0.14,
+          roughness: 0.62,
+          metalness: 0.12,
         }),
       );
 
@@ -813,16 +844,16 @@ export class DungeonMap {
     const foundationDepth = 13.5;
     const baseMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#192133',
-        roughness: 0.88,
+        color: '#222d44',
+        roughness: 0.86,
         metalness: 0.08,
       }),
     );
     const ledgeMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#28334b',
-        roughness: 0.72,
-        metalness: 0.16,
+        color: '#334363',
+        roughness: 0.7,
+        metalness: 0.15,
       }),
     );
 
@@ -870,16 +901,16 @@ export class DungeonMap {
 
     const rockMap = this.trackTex(textures.cavernRockMap.clone());
     rockMap.needsUpdate = true;
-    rockMap.repeat.set(26, 26);
+    rockMap.repeat.set(34, 34);
 
-    // 1. Leito profundo da caverna sob toda a masmorra
+    const bedRadius = Math.max(210, outerRadius + 95);
     const cavernBed = new THREE.Mesh(
-      this.trackGeo(new THREE.CircleGeometry(145, 48)),
+      this.trackGeo(new THREE.CircleGeometry(bedRadius, 48)),
       this.trackMat(
         new THREE.MeshStandardMaterial({
           map: rockMap,
-          color: '#6b7d9c',
-          roughness: 0.94,
+          color: '#889dc2',
+          roughness: 0.92,
           metalness: 0.04,
         }),
       ),
@@ -889,22 +920,21 @@ export class DungeonMap {
     cavernBed.receiveShadow = true;
     this.group.add(cavernBed);
 
-    // Fissuras arcanas/geotérmicas tênues no fundo do abismo
     const rng = mulberry32(this.seed ^ 0x5f3759df);
-    const fissureColors = ['#2462a6', '#7a3f9e', '#a85124'];
-    for (let i = 0; i < 6; i++) {
-      const ang = (i / 6) * Math.PI * 2 + rng() * 0.5;
-      const dist = 10 + rng() * (outerRadius + 16);
+    const fissureColors = ['#2e78c9', '#9152bd', '#c46632'];
+    for (let i = 0; i < 8; i++) {
+      const ang = (i / 8) * Math.PI * 2 + rng() * 0.45;
+      const dist = 14 + rng() * (outerRadius + 24);
       const fx = midX + Math.cos(ang) * dist;
       const fz = midZ + Math.sin(ang) * dist;
 
       const fissure = new THREE.Mesh(
-        this.trackGeo(new THREE.RingGeometry(1.4, 2.5 + rng() * 1.8, 12)),
+        this.trackGeo(new THREE.RingGeometry(1.8, 3.2 + rng() * 2.2, 12)),
         this.trackMat(
           new THREE.MeshBasicMaterial({
             color: fissureColors[i % fissureColors.length],
             transparent: true,
-            opacity: 0.24,
+            opacity: 0.25,
             depthWrite: false,
           }),
         ),
@@ -914,10 +944,9 @@ export class DungeonMap {
       this.group.add(fissure);
     }
 
-    // 2. Duas camadas de névoa translúcida no abismo criando paralaxe vertical
     const mistSpecs: Array<[number, number, string, number, number, number]> = [
-      [-9.2, 85, '#13203b', 0.2, 0.24, 0.16],
-      [-5.2, 72, '#1a2b4d', 0.13, -0.18, 0.22],
+      [-9.2, bedRadius * 0.65, '#1f3359', 0.16, 0.24, 0.16],
+      [-5.2, bedRadius * 0.55, '#28406e', 0.1, -0.18, 0.22],
     ];
     for (const [my, rad, color, opacity, sx, sz] of mistSpecs) {
       const mist = new THREE.Mesh(
@@ -943,11 +972,10 @@ export class DungeonMap {
       });
     }
 
-    // 3. Anfiteatro de paredões montanhosos atrás e nas laterais do mapa (arco visível -X / -Z e flancos)
     const cliffRockMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#171f2e',
-        roughness: 0.92,
+        color: '#25334d',
+        roughness: 0.9,
         metalness: 0.06,
       }),
     );
@@ -970,28 +998,25 @@ export class DungeonMap {
       return false;
     };
 
-    // Arco de 260° cobrindo esquerda, fundo norte/oeste e direita (+105°..+365° / -15°)
-    // deixando a frente (+15°..+95° em direção à câmera) aberta para nunca tapar a tela
-    const peakCount = 18;
+    const peakCount = 20;
     for (let i = 0; i < peakCount; i++) {
       const t = i / (peakCount - 1);
       const deg = 105 + t * 245;
       const rad = (deg * Math.PI) / 180;
-      const ringRadius = outerRadius + 14 + (i % 3) * 7 + rng() * 6;
+      const ringRadius = outerRadius + 16 + (i % 3) * 8 + rng() * 8;
       const mx = midX + Math.cos(rad) * ringRadius;
       const mz = midZ + Math.sin(rad) * ringRadius;
-      if (isNearPlayable(mx, mz, 9)) continue;
+      if (isNearPlayable(mx, mz, 10)) continue;
 
-      const peakH = 19 + rng() * 14;
+      const peakH = 24 + rng() * 16;
       const rotY = rng() * Math.PI * 2;
       const key = i % 2 === 0 ? 'mountain_group_1' : 'mountain_group_2';
 
-      // Base rochosa estilizada imediata + modelo CC0 detalhado sobreposto
       const baseRock = new THREE.Mesh(
-        this.trackGeo(new THREE.ConeGeometry(8.5 + rng() * 3.5, peakH * 0.72, 6)),
+        this.trackGeo(new THREE.ConeGeometry(10.5 + rng() * 4.5, peakH * 0.7, 6)),
         cliffRockMat,
       );
-      baseRock.position.set(mx, abyssY + peakH * 0.36, mz);
+      baseRock.position.set(mx, abyssY + peakH * 0.35, mz);
       baseRock.rotation.y = rotY;
       this.group.add(baseRock);
 
@@ -1001,28 +1026,27 @@ export class DungeonMap {
         z: mz,
         rotY,
         targetHeight: peakH,
-        scaleXZ: 1.3,
+        scaleXZ: 1.35,
         castShadow: false,
         receiveShadow: true,
         isDisposed: () => this.disposed,
       });
     }
 
-    // 4. Platôs rochosos, escarpas, ruínas e cristais arcanos espalhados pelo abismo e entre salas
     const crystalCyanMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#5ec8ff',
-        emissive: '#228be6',
-        emissiveIntensity: 1.05,
+        color: '#7dd3fc',
+        emissive: '#38bdf8',
+        emissiveIntensity: 1.1,
         roughness: 0.2,
         metalness: 0.25,
       }),
     );
     const crystalVioletMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#c78cff',
-        emissive: '#8b46d9',
-        emissiveIntensity: 1.05,
+        color: '#d8b4fe',
+        emissive: '#a855f7',
+        emissiveIntensity: 1.1,
         roughness: 0.2,
         metalness: 0.25,
       }),
@@ -1037,8 +1061,8 @@ export class DungeonMap {
     const blocksCameraBehind = (wx: number, wz: number): boolean => {
       const gx = Math.round(wx / CELL_SIZE + this.layout.originGx);
       const gz = Math.round(wz / CELL_SIZE + this.layout.originGz);
-      for (let dz = -5; dz <= 1; dz++) {
-        for (let dx = -5; dx <= 1; dx++) {
+      for (let dz = -6; dz <= 1; dz++) {
+        for (let dx = -6; dx <= 1; dx++) {
           if (isWalkableCell(gx + dx, gz + dz)) return true;
         }
       }
@@ -1046,21 +1070,18 @@ export class DungeonMap {
     };
 
     let placedProps = 0;
-    for (let attempt = 0; attempt < 95 && placedProps < 34; attempt++) {
-      const wx =
-        this.boundsMinX - 14 + rng() * (spanX + 28);
-      const wz =
-        this.boundsMinZ - 14 + rng() * (spanZ + 28);
+    for (let attempt = 0; attempt < 110 && placedProps < 38; attempt++) {
+      const wx = this.boundsMinX - 18 + rng() * (spanX + 36);
+      const wz = this.boundsMinZ - 18 + rng() * (spanZ + 36);
 
-      if (isNearPlayable(wx, wz, 5.2)) continue;
+      if (isNearPlayable(wx, wz, 5.5)) continue;
 
       const onCamForeground = blocksCameraBehind(wx, wz);
-      const maxTopY = onCamForeground ? -1.15 : 4.2;
-      const plateauH = 6.5 + rng() * 5.2;
+      const maxTopY = onCamForeground ? -1.15 : 4.6;
+      const plateauH = 6.8 + rng() * 5.4;
       const topY = Math.min(maxTopY, abyssY + plateauH + 1.8);
 
-      // Platô rochoso emergindo do leito da caverna
-      const spireRadius = 1.6 + rng() * 1.9;
+      const spireRadius = 1.8 + rng() * 2.1;
       const spireH = topY - abyssY;
       const spire = new THREE.Mesh(
         this.trackGeo(
@@ -1073,7 +1094,6 @@ export class DungeonMap {
       spire.receiveShadow = true;
       this.group.add(spire);
 
-      // Asset CC0 ou cristal arcano no topo do platô
       const roll = rng();
       if (roll < 0.42) {
         dungeonAssetLibrary.spawnProp('boulder_large', this.group, {
@@ -1081,7 +1101,7 @@ export class DungeonMap {
           y: topY - 0.3,
           z: wz,
           rotY: rng() * Math.PI * 2,
-          targetHeight: onCamForeground ? 1.1 : 2.6 + rng() * 1.8,
+          targetHeight: onCamForeground ? 1.1 : 2.8 + rng() * 1.9,
           castShadow: false,
           receiveShadow: true,
           isDisposed: () => this.disposed,
@@ -1092,7 +1112,7 @@ export class DungeonMap {
           y: topY - 0.2,
           z: wz,
           rotY: rng() * Math.PI * 2,
-          targetHeight: 3.4 + rng() * 2.2,
+          targetHeight: 3.6 + rng() * 2.4,
           castShadow: false,
           receiveShadow: true,
           isDisposed: () => this.disposed,
@@ -1103,15 +1123,15 @@ export class DungeonMap {
           y: topY - 0.1,
           z: wz,
           rotY: rng() * Math.PI * 2,
-          targetHeight: 2.3 + rng() * 1.2,
+          targetHeight: 2.5 + rng() * 1.3,
           castShadow: false,
           receiveShadow: true,
           isDisposed: () => this.disposed,
         });
       } else {
-        const cH = onCamForeground ? 1.0 : 1.7 + rng() * 1.3;
+        const cH = onCamForeground ? 1.0 : 1.8 + rng() * 1.4;
         const crystal = new THREE.Mesh(
-          this.trackGeo(new THREE.OctahedronGeometry(cH * 0.38, 0)),
+          this.trackGeo(new THREE.OctahedronGeometry(cH * 0.4, 0)),
           placedProps % 2 === 0 ? crystalCyanMat : crystalVioletMat,
         );
         crystal.scale.set(0.75, 1.65, 0.75);
@@ -1127,32 +1147,29 @@ export class DungeonMap {
   private buildFeaturesAndProps(): void {
     const stoneDarkMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#2e384d',
-        roughness: 0.65,
-        metalness: 0.18,
+        color: '#394661',
+        roughness: 0.62,
+        metalness: 0.16,
       }),
     );
     const goldMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#c99b42',
-        roughness: 0.3,
+        color: '#d4a348',
+        roughness: 0.28,
         metalness: 0.85,
       }),
     );
     const steelMat = this.trackMat(
       new THREE.MeshStandardMaterial({
-        color: '#5c6b86',
-        roughness: 0.42,
+        color: '#6b7c9c',
+        roughness: 0.4,
         metalness: 0.72,
       }),
     );
 
     const rng = mulberry32(this.seed ^ 0xa511e9b3);
-
-    // 1. Tochas de parede e estandartes reais montados nas paredes altas traseiras (-X / -Z)
     this.mountHighWallDecorations(rng);
 
-    // 2. Recursos específicos de cada sala + pilares decorados + braseiros + cantos
     for (let i = 0; i < this.layout.rooms.length; i++) {
       const room = this.layout.rooms[i];
       const halfW = room.w * CELL_SIZE * 0.5;
@@ -1166,30 +1183,58 @@ export class DungeonMap {
         this.buildTreasurePedestal(room, stoneDarkMat, goldMat);
       }
 
-      if (room.kind === 'chamber' && room.w >= 5 && room.h >= 5) {
-        const pxOff = halfW - 1.9;
-        const pzOff = halfH - 1.9;
+      // Colunas decoradas nos 4 cantos internos de salas amplas (>= 8x8), evitando aberturas de corredor
+      if (room.kind !== 'entrance' && room.w >= 8 && room.h >= 8) {
+        const pxOff = halfW - 2.8;
+        const pzOff = halfH - 2.8;
         const corners: Array<[number, number]> = [
           [room.centerX - pxOff, room.centerZ - pzOff],
+          [room.centerX + pxOff, room.centerZ - pzOff],
+          [room.centerX - pxOff, room.centerZ + pzOff],
           [room.centerX + pxOff, room.centerZ + pzOff],
         ];
         for (const [cx, cz] of corners) {
-          this.addDecoratedPillar(cx, cz, stoneDarkMat, goldMat);
+          if (!this.isNearRoomCorridor(room.id, cx, cz, 3.6)) {
+            this.addDecoratedPillar(cx, cz, stoneDarkMat, goldMat);
+          }
         }
       }
 
-      // Braseiro aceso por sala (iluminado pelo pool dinâmico conforme proximidade!)
-      const brazierOffsetX = room.kind === 'entrance' ? -halfW + 1.5 : halfW - 1.7;
-      const brazierOffsetZ = room.kind === 'entrance' ? -halfH + 1.5 : -halfH + 1.7;
-      const bx = room.centerX + brazierOffsetX;
-      const bz = room.centerZ + brazierOffsetZ;
-      this.addBrazier(bx, bz, steelMat, i * 1.37);
+      // Dois braseiros em cantos opostos nas salas amplas para iluminação quente uniforme
+      this.addBrazier(
+        room.centerX - halfW + 1.8,
+        room.centerZ - halfH + 1.8,
+        steelMat,
+        i * 1.37,
+      );
+      if (room.w >= 8 && room.kind !== 'entrance') {
+        this.addBrazier(
+          room.centerX + halfW - 1.8,
+          room.centerZ + halfH - 1.8,
+          steelMat,
+          i * 1.37 + 2.1,
+        );
+      }
 
-      // Clutter temático nos cantos seguros das câmaras e entrada (barris, caixas, escombros)
       if (room.kind === 'chamber' || room.kind === 'entrance') {
         this.populateRoomCorners(room, rng);
       }
     }
+  }
+
+  private isNearRoomCorridor(
+    roomId: number,
+    wx: number,
+    wz: number,
+    threshold: number,
+  ): boolean {
+    for (const cor of this.layout.corridors) {
+      if (cor.fromRoomId !== roomId && cor.toRoomId !== roomId) continue;
+      const cx = gridToWorldX(cor.gx + cor.w * 0.5, this.layout.originGx);
+      const cz = gridToWorldZ(cor.gz + cor.h * 0.5, this.layout.originGz);
+      if (Math.hypot(wx - cx, wz - cz) < threshold) return true;
+    }
+    return false;
   }
 
   private mountHighWallDecorations(rng: () => number): void {
@@ -1227,7 +1272,7 @@ export class DungeonMap {
       const spot = wallMountSpots[i];
       let tooClose = false;
       for (const p of placed) {
-        if (Math.hypot(spot.x - p.x, spot.z - p.z) < 4.5) {
+        if (Math.hypot(spot.x - p.x, spot.z - p.z) < 5.0) {
           tooClose = true;
           break;
         }
@@ -1241,25 +1286,24 @@ export class DungeonMap {
           y: 1.78,
           z: spot.z,
           rotY: spot.rotY,
-          targetHeight: 0.92,
+          targetHeight: 0.96,
           castShadow: false,
           receiveShadow: true,
           isDisposed: () => this.disposed,
         });
 
-        // Chama animada + fonte registrada no pool dinâmico de luz
         const fwdX = Math.sin(spot.rotY) * 0.24;
         const fwdZ = Math.cos(spot.rotY) * 0.24;
-        const flame = this.createFlameMesh(0.12, 0.32, i * 0.9);
-        flame.position.set(spot.x + fwdX, 2.55, spot.z + fwdZ);
+        const flame = this.createFlameMesh(0.13, 0.34, i * 0.9);
+        flame.position.set(spot.x + fwdX, 2.58, spot.z + fwdZ);
         this.group.add(flame);
 
         this.fireSources.push({
           x: spot.x + fwdX,
-          y: 2.55,
+          y: 2.58,
           z: spot.z + fwdZ,
           phase: i * 1.1,
-          baseIntensity: 2.45,
+          baseIntensity: 3.1,
         });
       } else {
         dungeonAssetLibrary.spawnProp('banner_royal', this.group, {
@@ -1267,7 +1311,7 @@ export class DungeonMap {
           y: 0.95 + rng() * 0.15,
           z: spot.z,
           rotY: spot.rotY,
-          targetHeight: 1.85,
+          targetHeight: 1.9,
           castShadow: false,
           receiveShadow: true,
           isDisposed: () => this.disposed,
@@ -1280,9 +1324,9 @@ export class DungeonMap {
     const halfW = room.w * CELL_SIZE * 0.5;
     const halfH = room.h * CELL_SIZE * 0.5;
     const cornerCandidates: Array<[number, number, number]> = [
-      [room.centerX - halfW + 1.05, room.centerZ + halfH - 1.05, Math.PI * 0.25],
-      [room.centerX + halfW - 1.05, room.centerZ + halfH - 1.05, -Math.PI * 0.25],
-      [room.centerX - halfW + 1.05, room.centerZ - halfH + 1.05, Math.PI * 0.75],
+      [room.centerX - halfW + 1.15, room.centerZ + halfH - 1.15, Math.PI * 0.25],
+      [room.centerX + halfW - 1.15, room.centerZ + halfH - 1.15, -Math.PI * 0.25],
+      [room.centerX + halfW - 1.15, room.centerZ - halfH + 1.15, -Math.PI * 0.75],
     ];
 
     const keys = [
@@ -1295,28 +1339,15 @@ export class DungeonMap {
     let count = 0;
     for (const [px, pz, rotY] of cornerCandidates) {
       if (count >= 2) break;
-      if (rng() > 0.65) continue;
+      if (rng() > 0.7) continue;
+      if (this.isNearRoomCorridor(room.id, px, pz, 4.6)) continue;
 
-      // Evita bloquear qualquer abertura de corredor ligado à sala
-      let nearCorridor = false;
-      for (const cor of this.layout.corridors) {
-        if (cor.fromRoomId !== room.id && cor.toRoomId !== room.id) continue;
-        const cx = gridToWorldX(cor.gx + cor.w * 0.5, this.layout.originGx);
-        const cz = gridToWorldZ(cor.gz + cor.h * 0.5, this.layout.originGz);
-        if (Math.hypot(px - cx, pz - cz) < 4.2) {
-          nearCorridor = true;
-          break;
-        }
-      }
-      if (nearCorridor) continue;
-
-      // Evita encostar nos braseiros ou zonas de interação
       let overlapsFeature = false;
       for (const z of this.interactionZones) {
-        if (Math.hypot(px - z.x, pz - z.z) < 2.2) overlapsFeature = true;
+        if (Math.hypot(px - z.x, pz - z.z) < 2.4) overlapsFeature = true;
       }
       for (const c of this.circleColliders) {
-        if (Math.hypot(px - c.x, pz - c.z) < 1.6) overlapsFeature = true;
+        if (Math.hypot(px - c.x, pz - c.z) < 1.8) overlapsFeature = true;
       }
       if (overlapsFeature) continue;
 
@@ -1327,14 +1358,14 @@ export class DungeonMap {
         y: 0,
         z: pz,
         rotY: rotY + (rng() - 0.5) * 0.4,
-        targetHeight: isRubble ? 0.62 : chosen === 'crates_stacked' ? 1.35 : 1.15,
+        targetHeight: isRubble ? 0.68 : chosen === 'crates_stacked' ? 1.4 : 1.2,
         castShadow: true,
         receiveShadow: true,
         isDisposed: () => this.disposed,
       });
 
       if (!isRubble) {
-        this.circleColliders.push({ x: px, z: pz, radius: 0.52 });
+        this.circleColliders.push({ x: px, z: pz, radius: 0.55 });
       }
       count++;
     }
@@ -1346,12 +1377,12 @@ export class DungeonMap {
     goldMat: THREE.Material,
   ): void {
     const arrivalRing = new THREE.Mesh(
-      this.trackGeo(new THREE.RingGeometry(1.15, 1.4, 32)),
+      this.trackGeo(new THREE.RingGeometry(1.3, 1.58, 32)),
       this.trackMat(
         new THREE.MeshBasicMaterial({
-          color: '#6fb4ff',
+          color: '#79bdff',
           transparent: true,
-          opacity: 0.48,
+          opacity: 0.52,
           side: THREE.DoubleSide,
           depthWrite: false,
         }),
@@ -1369,13 +1400,13 @@ export class DungeonMap {
     dirX /= len;
     dirZ /= len;
 
-    const px = room.centerX - dirX * 3.6;
-    const pz = room.centerZ - dirZ * 3.6;
+    const px = room.centerX - dirX * 5.2;
+    const pz = room.centerZ - dirZ * 5.2;
     const facingYaw = Math.atan2(dirX, dirZ);
 
     const portal = this.createArcanePortalMesh(
       '#58a8ff',
-      '#7fd0ff',
+      '#8ad6ff',
       stoneMat,
       goldMat,
       true,
@@ -1384,9 +1415,8 @@ export class DungeonMap {
     portal.rotation.y = facingYaw;
     this.group.add(portal);
 
-    // Flanqueia o portal de retorno com candelabros altos
-    const perpX = Math.cos(facingYaw) * 1.65;
-    const perpZ = -Math.sin(facingYaw) * 1.65;
+    const perpX = Math.cos(facingYaw) * 1.75;
+    const perpZ = -Math.sin(facingYaw) * 1.75;
     for (const side of [-1, 1]) {
       const cx = px + perpX * side;
       const cz = pz + perpZ * side;
@@ -1395,7 +1425,7 @@ export class DungeonMap {
         y: 0,
         z: cz,
         rotY: facingYaw,
-        targetHeight: 1.9,
+        targetHeight: 1.95,
         castShadow: true,
         receiveShadow: true,
         isDisposed: () => this.disposed,
@@ -1405,14 +1435,14 @@ export class DungeonMap {
         y: 1.95,
         z: cz,
         phase: side * 0.8,
-        baseIntensity: 2.0,
+        baseIntensity: 2.6,
       });
     }
 
     this.interactionZones.push({
       x: px,
       z: pz,
-      radiusSq: 2.2 * 2.2,
+      radiusSq: 2.4 * 2.4,
       label: 'Portal da Alvorada — Retornar ao Salão Real',
       action: 'exit-dungeon',
       actionLabel: 'Voltar ao Salão',
@@ -1429,16 +1459,22 @@ export class DungeonMap {
 
     const dx = room.centerX - parent.centerX;
     const dz = room.centerZ - parent.centerZ;
+    const len = Math.hypot(dx, dz) || 1;
+    const fwdX = dx / len;
+    const fwdZ = dz / len;
+
+    // Empurra os marcos para o fundo da grande arena do Santuário, deixando o centro para o Campeão Esqueleto
+    const backAnchorX = room.centerX + fwdX * 3.4;
+    const backAnchorZ = room.centerZ + fwdZ * 3.4;
+
     const sepAlongX = Math.abs(dz) >= Math.abs(dx);
-    const halfSpan = sepAlongX
-      ? Math.min(2.6, room.w * CELL_SIZE * 0.5 - 1.6)
-      : Math.min(2.6, room.h * CELL_SIZE * 0.5 - 1.6);
+    const halfSpan = 3.8;
 
-    const riftX = room.centerX + (sepAlongX ? -halfSpan : 0);
-    const riftZ = room.centerZ + (sepAlongX ? 0 : -halfSpan);
+    const riftX = backAnchorX + (sepAlongX ? -halfSpan : 0);
+    const riftZ = backAnchorZ + (sepAlongX ? 0 : -halfSpan);
 
-    const sealX = room.centerX + (sepAlongX ? halfSpan : 0);
-    const sealZ = room.centerZ + (sepAlongX ? 0 : halfSpan);
+    const sealX = backAnchorX + (sepAlongX ? halfSpan : 0);
+    const sealZ = backAnchorZ + (sepAlongX ? 0 : halfSpan);
 
     const rift = this.createArcanePortalMesh(
       '#b366ff',
@@ -1451,11 +1487,10 @@ export class DungeonMap {
     rift.rotation.y = Math.atan2(parent.centerX - riftX, parent.centerZ - riftZ);
     this.group.add(rift);
 
-    // Arco gótico decorativo atrás da Fenda quando não está no eixo da câmera frontal
     dungeonAssetLibrary.spawnProp('candle_triple', this.group, {
-      x: riftX + (sepAlongX ? -1.35 : 0),
+      x: riftX + (sepAlongX ? -1.45 : 0),
       y: 0,
-      z: riftZ + (sepAlongX ? 0 : -1.35),
+      z: riftZ + (sepAlongX ? 0 : -1.45),
       rotY: 0,
       targetHeight: 0.55,
       castShadow: false,
@@ -1466,7 +1501,7 @@ export class DungeonMap {
     this.interactionZones.push({
       x: riftX,
       z: riftZ,
-      radiusSq: 2.1 * 2.1,
+      radiusSq: 2.3 * 2.3,
       label: 'Fenda Abissal — Profundezas Instáveis',
       action: 'next-dungeon-floor',
       actionLabel: `Descer ao Andar ${this.floorNumber + 1}`,
@@ -1513,7 +1548,7 @@ export class DungeonMap {
     this.interactionZones.push({
       x: sealX,
       z: sealZ,
-      radiusSq: 2.1 * 2.1,
+      radiusSq: 2.3 * 2.3,
       label: 'Selo da Alvorada — Retornar à Home',
       action: 'exit-dungeon',
       actionLabel: 'Voltar ao Salão',
@@ -1529,7 +1564,7 @@ export class DungeonMap {
     pedGroup.position.set(room.centerX, 0, room.centerZ);
 
     const base = new THREE.Mesh(
-      this.trackGeo(new THREE.CylinderGeometry(1.2, 1.42, 0.24, 14)),
+      this.trackGeo(new THREE.CylinderGeometry(1.25, 1.48, 0.24, 14)),
       stoneMat,
     );
     base.position.y = 0.12;
@@ -1537,7 +1572,7 @@ export class DungeonMap {
     pedGroup.add(base);
 
     const trim = new THREE.Mesh(
-      this.trackGeo(new THREE.TorusGeometry(1.18, 0.045, 8, 24)),
+      this.trackGeo(new THREE.TorusGeometry(1.22, 0.045, 8, 24)),
       goldMat,
     );
     trim.rotation.x = Math.PI / 2;
@@ -1545,15 +1580,14 @@ export class DungeonMap {
     pedGroup.add(trim);
 
     this.group.add(pedGroup);
-    this.circleColliders.push({ x: room.centerX, z: room.centerZ, radius: 0.8 });
+    this.circleColliders.push({ x: room.centerX, z: room.centerZ, radius: 0.85 });
 
-    // Baú dourado KayKit + pilha de moedas + velas triplas CC0
     dungeonAssetLibrary.spawnProp('chest_gold', pedGroup, {
       x: 0,
       y: 0.24,
       z: 0,
       rotY: Math.PI * 0.25,
-      targetHeight: 0.92,
+      targetHeight: 0.95,
       castShadow: true,
       receiveShadow: true,
       isDisposed: () => this.disposed,
@@ -1569,9 +1603,9 @@ export class DungeonMap {
     });
 
     dungeonAssetLibrary.spawnProp('coin_stack', pedGroup, {
-      x: -0.78,
+      x: -0.82,
       y: 0.24,
-      z: 0.55,
+      z: 0.56,
       rotY: 0.5,
       targetHeight: 0.44,
       castShadow: true,
@@ -1580,9 +1614,9 @@ export class DungeonMap {
     });
 
     dungeonAssetLibrary.spawnProp('candle_triple', pedGroup, {
-      x: 0.78,
+      x: 0.82,
       y: 0.24,
-      z: -0.5,
+      z: -0.52,
       rotY: -0.4,
       targetHeight: 0.48,
       castShadow: false,
@@ -1591,12 +1625,74 @@ export class DungeonMap {
     });
 
     this.fireSources.push({
-      x: room.centerX + 0.78,
-      y: 0.8,
-      z: room.centerZ - 0.5,
+      x: room.centerX + 0.82,
+      y: 0.85,
+      z: room.centerZ - 0.52,
       phase: 2.1,
-      baseIntensity: 2.3,
+      baseIntensity: 2.9,
     });
+  }
+
+  private buildSkeletonEnemies(): void {
+    const rng = mulberry32(this.seed ^ 0x3c6ef372);
+    let nextEnemyId = 1;
+
+    const addEnemy = (
+      archetype: SkeletonArchetype,
+      x: number,
+      z: number,
+      yaw: number,
+    ) => {
+      const enemy = new SkeletonEnemy(nextEnemyId++, archetype, x, z, yaw);
+      this.enemies.push(enemy);
+      this.group.add(enemy.group);
+    };
+
+    for (const room of this.layout.rooms) {
+      if (room.kind === 'entrance') continue;
+
+      if (room.kind === 'sanctum') {
+        const parent = this.layout.rooms[room.connections[0] ?? 0] ?? this.layout.rooms[0];
+        const faceYaw = Math.atan2(
+          parent.centerX - room.centerX,
+          parent.centerZ - room.centerZ,
+        );
+        addEnemy('champion', room.centerX - Math.sin(faceYaw) * 0.8, room.centerZ - Math.cos(faceYaw) * 0.8, faceYaw);
+
+        const perpX = Math.cos(faceYaw) * 3.4;
+        const perpZ = -Math.sin(faceYaw) * 3.4;
+        addEnemy('warrior', room.centerX + perpX, room.centerZ + perpZ, faceYaw);
+        addEnemy('rogue', room.centerX - perpX, room.centerZ - perpZ, faceYaw);
+        continue;
+      }
+
+      if (room.kind === 'treasure') {
+        const guardCount = 3 + (rng() > 0.55 ? 1 : 0);
+        const archetypes: SkeletonArchetype[] = ['warrior', 'rogue', 'minion', 'rogue'];
+        const baseAngle = rng() * Math.PI * 2;
+        for (let i = 0; i < guardCount; i++) {
+          const ang = baseAngle + (i / guardCount) * Math.PI * 2;
+          const dist = 3.8 + rng() * 0.9;
+          const ex = room.centerX + Math.cos(ang) * dist;
+          const ez = room.centerZ + Math.sin(ang) * dist;
+          addEnemy(archetypes[i % archetypes.length], ex, ez, ang + Math.PI);
+        }
+        continue;
+      }
+
+      // Salas de câmara amplas (8..11 células): 3 a 5 esqueletos patrulhando
+      const count = 3 + Math.floor(rng() * 3);
+      const pool: SkeletonArchetype[] = ['minion', 'minion', 'rogue', 'warrior'];
+      const baseAngle = rng() * Math.PI * 2;
+      for (let i = 0; i < count; i++) {
+        const ang = baseAngle + (i / count) * Math.PI * 2 + (rng() - 0.5) * 0.4;
+        const dist = 3.2 + rng() * 2.8;
+        const ex = room.centerX + Math.cos(ang) * dist;
+        const ez = room.centerZ + Math.sin(ang) * dist;
+        const chosen = pool[Math.floor(rng() * pool.length)];
+        addEnemy(chosen, ex, ez, rng() * Math.PI * 2);
+      }
+    }
   }
 
   private createArcanePortalMesh(
@@ -1647,7 +1743,7 @@ export class DungeonMap {
         new THREE.MeshBasicMaterial({
           color: ringColor,
           transparent: true,
-          opacity: 0.9,
+          opacity: 0.92,
         }),
       ),
     );
@@ -1661,7 +1757,7 @@ export class DungeonMap {
         new THREE.MeshBasicMaterial({
           color: lightColor,
           transparent: true,
-          opacity: 0.38,
+          opacity: 0.4,
           side: THREE.DoubleSide,
         }),
       ),
@@ -1670,7 +1766,7 @@ export class DungeonMap {
     g.add(core);
 
     if (withLight) {
-      const light = new THREE.PointLight(lightColor, 3.2, 11.5, 1.5);
+      const light = new THREE.PointLight(lightColor, 3.4, 14.0, 1.45);
       light.position.set(0, 1.9, 0.8);
       g.add(light);
     }
@@ -1711,7 +1807,7 @@ export class DungeonMap {
         return g;
       },
     });
-    this.circleColliders.push({ x, z, radius: 0.54 });
+    this.circleColliders.push({ x, z, radius: 0.56 });
   }
 
   private createFlameMesh(radius: number, height: number, phase: number): THREE.Mesh {
@@ -1719,9 +1815,9 @@ export class DungeonMap {
       this.trackGeo(new THREE.ConeGeometry(radius, height, 6)),
       this.trackMat(
         new THREE.MeshBasicMaterial({
-          color: '#ffa54c',
+          color: '#ffb05c',
           transparent: true,
-          opacity: 0.92,
+          opacity: 0.94,
         }),
       ),
     );
@@ -1750,16 +1846,16 @@ export class DungeonMap {
     bowl.castShadow = true;
     bGroup.add(bowl);
 
-    const flame = this.createFlameMesh(0.22, 0.62, phase);
-    flame.position.y = 0.84;
+    const flame = this.createFlameMesh(0.24, 0.64, phase);
+    flame.position.y = 0.85;
     bGroup.add(flame);
 
     this.fireSources.push({
       x,
-      y: 1.25,
+      y: 1.35,
       z,
       phase,
-      baseIntensity: 2.75,
+      baseIntensity: 3.6,
     });
 
     this.group.add(bGroup);
@@ -1777,9 +1873,9 @@ export class DungeonMap {
     const shaftMat = this.trackMat(
       new THREE.MeshBasicMaterial({
         map: textures.lightShaftMap,
-        color: '#88bcff',
+        color: '#a8d2ff',
         transparent: true,
-        opacity: 0.14,
+        opacity: 0.16,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
@@ -1788,42 +1884,42 @@ export class DungeonMap {
 
     const floorGlowMat = this.trackMat(
       new THREE.MeshBasicMaterial({
-        color: '#90c4ff',
+        color: '#a8d2ff',
         transparent: true,
-        opacity: 0.12,
+        opacity: 0.14,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
     );
 
     for (const room of shaftTargets) {
-      const originX = room.centerX - shaftDir.x * 8.5;
-      const originY = -shaftDir.y * 8.5;
-      const originZ = room.centerZ - shaftDir.z * 8.5;
+      const originX = room.centerX - shaftDir.x * 9.5;
+      const originY = -shaftDir.y * 9.5;
+      const originZ = room.centerZ - shaftDir.z * 9.5;
 
       const beamGroup = new THREE.Group();
       beamGroup.position.set(originX, originY, originZ);
       beamGroup.quaternion.setFromUnitVectors(downAxis, shaftDir);
 
       const p1 = new THREE.Mesh(
-        this.trackGeo(new THREE.PlaneGeometry(3.2, 12.5)),
+        this.trackGeo(new THREE.PlaneGeometry(4.0, 14.0)),
         shaftMat,
       );
-      p1.position.y = -6.25;
+      p1.position.y = -7.0;
       beamGroup.add(p1);
 
       const p2 = new THREE.Mesh(
-        this.trackGeo(new THREE.PlaneGeometry(3.2, 12.5)),
+        this.trackGeo(new THREE.PlaneGeometry(4.0, 14.0)),
         shaftMat,
       );
-      p2.position.y = -6.25;
+      p2.position.y = -7.0;
       p2.rotation.y = Math.PI * 0.5;
       beamGroup.add(p2);
 
       this.group.add(beamGroup);
 
       const floorPatch = new THREE.Mesh(
-        this.trackGeo(new THREE.CircleGeometry(2.1, 20)),
+        this.trackGeo(new THREE.CircleGeometry(2.6, 20)),
         floorGlowMat,
       );
       floorPatch.rotation.x = -Math.PI / 2;
@@ -1837,13 +1933,13 @@ export class DungeonMap {
     this.emberPositions = new Float32Array(this.emberCount * 3);
     this.emberSeeds = new Float32Array(this.emberCount);
 
-    const spanX = this.boundsMaxX - this.boundsMinX + 22;
-    const spanZ = this.boundsMaxZ - this.boundsMinZ + 22;
+    const spanX = this.boundsMaxX - this.boundsMinX + 26;
+    const spanZ = this.boundsMaxZ - this.boundsMinZ + 26;
 
     for (let i = 0; i < this.emberCount; i++) {
-      this.emberPositions[i * 3 + 0] = this.boundsMinX - 11 + Math.random() * spanX;
-      this.emberPositions[i * 3 + 1] = -4.5 + Math.random() * 9.5;
-      this.emberPositions[i * 3 + 2] = this.boundsMinZ - 11 + Math.random() * spanZ;
+      this.emberPositions[i * 3 + 0] = this.boundsMinX - 13 + Math.random() * spanX;
+      this.emberPositions[i * 3 + 1] = -4.5 + Math.random() * 10.0;
+      this.emberPositions[i * 3 + 2] = this.boundsMinZ - 13 + Math.random() * spanZ;
       this.emberSeeds[i] = Math.random() * Math.PI * 2;
     }
 
@@ -1854,7 +1950,7 @@ export class DungeonMap {
 
     const mat = this.trackMat(
       new THREE.PointsMaterial({
-        color: '#9ecbff',
+        color: '#afd6ff',
         size: 0.1,
         transparent: true,
         opacity: 0.55,
@@ -1867,14 +1963,91 @@ export class DungeonMap {
     this.group.add(this.emberPoints);
   }
 
+  public getAliveEnemyColliders(): readonly CircleCollider[] {
+    this.enemyColliderBuffer.length = 0;
+    for (let i = 0; i < this.enemies.length; i++) {
+      const e = this.enemies[i];
+      if (e.isAlive()) {
+        this.enemyColliderBuffer.push({
+          x: e.group.position.x,
+          z: e.group.position.z,
+          radius: e.radius * 0.85,
+        });
+      }
+    }
+    return this.enemyColliderBuffer;
+  }
+
+  public applyPlayerHitboxes(hitboxes: readonly PlayerAttackHitbox[]): void {
+    if (hitboxes.length === 0) return;
+
+    for (let h = 0; h < hitboxes.length; h++) {
+      const hb = hitboxes[h];
+      for (let i = 0; i < this.enemies.length; i++) {
+        const enemy = this.enemies[i];
+        if (!enemy.isAlive()) continue;
+
+        let seenIds = this.enemyHitIds.get(enemy.id);
+        if (seenIds?.has(hb.id)) continue;
+
+        const dx = enemy.group.position.x - hb.originX;
+        const dz = enemy.group.position.z - hb.originZ;
+        const reach = hb.radius + enemy.radius;
+        const distSq = dx * dx + dz * dz;
+        if (distSq > reach * reach) continue;
+
+        const dist = Math.sqrt(distSq);
+        const nx = dist > 1e-4 ? dx / dist : hb.dirX;
+        const nz = dist > 1e-4 ? dz / dist : hb.dirZ;
+
+        if (hb.type === 'arc' && dist > 0.35) {
+          const dot = nx * hb.dirX + nz * hb.dirZ;
+          if (dot < hb.minDot) continue;
+        }
+
+        if (!seenIds) {
+          seenIds = new Set<number>();
+          this.enemyHitIds.set(enemy.id, seenIds);
+        }
+        seenIds.add(hb.id);
+
+        enemy.takeDamage(hb.damage, nx, nz, hb.knockback);
+        this.spawnHitSparks(enemy.group.position.x, 1.05, enemy.group.position.z);
+      }
+    }
+  }
+
+  private spawnHitSparks(x: number, y: number, z: number): void {
+    for (let i = 0; i < 6; i++) {
+      const mesh = new THREE.Mesh(this.sparkGeo, this.sparkMat);
+      mesh.position.set(x, y, z);
+      const ang = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
+      const spd = 2.6 + Math.random() * 2.4;
+      this.group.add(mesh);
+      this.hitSparks.push({
+        mesh,
+        velX: Math.cos(ang) * spd,
+        velY: 2.2 + Math.random() * 2.0,
+        velZ: Math.sin(ang) * spd,
+        life: 0.28,
+        maxLife: 0.28,
+      });
+    }
+  }
+
   public getNearbyInteractionPrompt(
     pos: THREE.Vector3,
   ): InteractionPrompt | null {
     return findNearbyInteraction(this.interactionZones, pos);
   }
 
-  public update(dt: number, elapsed: number, playerPos: THREE.Vector3): void {
-    this.keyLight.position.set(playerPos.x + 16, 20, playerPos.z - 12);
+  public update(
+    dt: number,
+    elapsed: number,
+    playerPos: THREE.Vector3,
+    cameraQuat?: THREE.Quaternion,
+  ): void {
+    this.keyLight.position.set(playerPos.x + 18, 24, playerPos.z - 14);
     this.keyLight.target.position.copy(playerPos);
 
     for (let i = 0; i < this.portalRings.length; i++) {
@@ -1895,14 +2068,12 @@ export class DungeonMap {
       f.mesh.scale.y = f.baseScaleY + flicker;
     }
 
-    // Deriva sutil das camadas de névoa no abismo
     for (let i = 0; i < this.mistLayers.length; i++) {
       const m = this.mistLayers[i];
       m.mesh.position.x = m.baseX + Math.sin(elapsed * 0.22 + i) * 2.5 * m.speedX;
       m.mesh.position.z = m.baseZ + Math.cos(elapsed * 0.18 + i) * 2.5 * m.speedZ;
     }
 
-    // Atualiza o pool de 5 PointLights de fogo posicionando nas 5 fontes mais próximas do jogador
     const poolSize = this.torchLightPool.length;
     if (poolSize > 0 && this.fireSources.length > 0) {
       const bestIdx: number[] = [];
@@ -1944,6 +2115,36 @@ export class DungeonMap {
       }
     }
 
+    // Atualiza faíscas de impacto
+    for (let i = this.hitSparks.length - 1; i >= 0; i--) {
+      const s = this.hitSparks[i];
+      s.life -= dt;
+      if (s.life <= 0) {
+        this.group.remove(s.mesh);
+        this.hitSparks.splice(i, 1);
+        continue;
+      }
+      s.velY -= 9.8 * dt;
+      s.mesh.position.x += s.velX * dt;
+      s.mesh.position.y += s.velY * dt;
+      s.mesh.position.z += s.velZ * dt;
+      s.mesh.scale.setScalar(s.life / s.maxLife);
+    }
+
+    // Atualiza inimigos esqueletos
+    const camQuat = cameraQuat ?? new THREE.Quaternion();
+    for (let i = 0; i < this.enemies.length; i++) {
+      this.enemies[i].update(
+        dt,
+        playerPos,
+        camQuat,
+        this.circleColliders,
+        this.boxColliders,
+        this.boundsRadius,
+        this.enemies,
+      );
+    }
+
     const posAttr = this.emberPoints.geometry.getAttribute(
       'position',
     ) as THREE.BufferAttribute;
@@ -1954,7 +2155,7 @@ export class DungeonMap {
       this.emberPositions[idx + 0] += Math.sin(elapsed * 0.9 + seed) * dt * 0.18;
       this.emberPositions[idx + 2] += Math.cos(elapsed * 0.8 + seed) * dt * 0.18;
 
-      if (this.emberPositions[idx + 1] > 5.2) {
+      if (this.emberPositions[idx + 1] > 5.5) {
         this.emberPositions[idx + 1] = -4.2;
       }
     }
@@ -2027,7 +2228,7 @@ export class DungeonMap {
     for (const cor of this.layout.corridors) {
       const wx0 = gridToWorldX(cor.gx, this.layout.originGx);
       const wz0 = gridToWorldZ(cor.gz, this.layout.originGz);
-      drawIsoRect(wx0, wz0, cor.w * CELL_SIZE, cor.h * CELL_SIZE, '#334668');
+      drawIsoRect(wx0, wz0, cor.w * CELL_SIZE, cor.h * CELL_SIZE, '#3d547d');
     }
 
     for (const room of this.layout.rooms) {
@@ -2043,7 +2244,7 @@ export class DungeonMap {
             ? 'rgba(202, 148, 52, 0.55)'
             : room.kind === 'entrance'
               ? 'rgba(56, 134, 232, 0.48)'
-              : '#44597e';
+              : '#4e6791';
 
       drawIsoRect(wx0, wz0, rw, rh, fill, 'rgba(182, 206, 245, 0.36)');
 
@@ -2056,9 +2257,26 @@ export class DungeonMap {
               ? '#fde047'
               : '#7dd3fc';
         ctx.beginPath();
-        ctx.arc(c.x, c.y, 2.8, 0, Math.PI * 2);
+        ctx.arc(c.x, c.y, 2.6, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+
+    // Esqueletos vivos no minimapa
+    for (let i = 0; i < this.enemies.length; i++) {
+      const enemy = this.enemies[i];
+      if (!enemy.isAlive()) continue;
+      const ec = toCanvas(enemy.group.position.x, enemy.group.position.z);
+      ctx.fillStyle = enemy.archetype === 'champion' ? '#e879f9' : '#f87171';
+      ctx.beginPath();
+      ctx.arc(
+        ec.x,
+        ec.y,
+        enemy.archetype === 'champion' ? 2.6 : 1.7,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
     }
 
     const pCanvas = toCanvas(playerPos.x, playerPos.z);
@@ -2088,6 +2306,13 @@ export class DungeonMap {
 
   public dispose(): void {
     this.disposed = true;
+    for (let i = 0; i < this.enemies.length; i++) {
+      this.enemies[i].dispose();
+    }
+    this.enemies.length = 0;
+    this.enemyHitIds.clear();
+    this.hitSparks.length = 0;
+
     for (const geo of this.ownedGeometries) {
       geo.dispose();
     }
