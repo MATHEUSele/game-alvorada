@@ -15,6 +15,40 @@
     <title>Salão Real da Alvorada — ARPG Pré-Alfa</title>
   </head>
   <body>
+    <!-- Gradientes compartilhados para os ícones polidos dos botões -->
+    <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+      <defs>
+        <linearGradient id="ico-steel" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="45%" stop-color="#dbeafe" />
+          <stop offset="100%" stop-color="#60a5fa" />
+        </linearGradient>
+        <linearGradient id="ico-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#e0f2fe" />
+          <stop offset="45%" stop-color="#38bdf8" />
+          <stop offset="100%" stop-color="#0284c7" />
+        </linearGradient>
+        <linearGradient id="ico-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fef3c7" />
+          <stop offset="48%" stop-color="#fbbf24" />
+          <stop offset="100%" stop-color="#b45309" />
+        </linearGradient>
+        <linearGradient id="ico-ult" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="35%" stop-color="#fde68a" />
+          <stop offset="100%" stop-color="#f59e0b" />
+        </linearGradient>
+        <radialGradient id="ico-aura-cyan" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.45" />
+          <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="ico-aura-gold" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.52" />
+          <stop offset="100%" stop-color="#fbbf24" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+    </svg>
+
     <div id="app">
       <canvas id="game-canvas"></canvas>
 
@@ -30,11 +64,20 @@
 
       <div class="hud-top-right">
         <button id="qr-open-btn" class="hud-btn" type="button">
-          <span aria-hidden="true">📱</span>
+          <svg class="hud-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="2.5" width="12" height="19" rx="2.5" fill="none" stroke="url(#ico-gold)" stroke-width="1.8"/>
+            <rect x="8.5" y="6" width="3" height="3" rx="0.5" fill="#7dd3fc"/>
+            <rect x="12.5" y="6" width="3" height="3" rx="0.5" fill="#7dd3fc"/>
+            <rect x="8.5" y="10" width="3" height="3" rx="0.5" fill="#fde68a"/>
+            <rect x="12.5" y="10" width="3" height="3" rx="0.5" fill="#7dd3fc"/>
+            <circle cx="12" cy="18" r="1" fill="url(#ico-gold)"/>
+          </svg>
           <span>Jogar no Celular</span>
         </button>
         <button id="fullscreen-btn" class="hud-btn mobile-only" type="button">
-          <span aria-hidden="true">⛶</span>
+          <svg class="hud-btn-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="url(#ico-gold)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <span>Tela Cheia</span>
         </button>
       </div>
@@ -66,13 +109,16 @@
           class="skill-btn-pc"
           type="button"
           data-skill-slot="slash"
-          title="Corte da Alvorada (Tecla 1 ou J)"
+          title="Combo 3 Cortes da Alvorada (Tecla 1 ou J)"
         >
           <span class="skill-key">1 / J</span>
-          <svg class="skill-svg" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M5 24 Q16 26 27 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-            <path d="M10 21 L25 6 L27 8 L13 24 Z" fill="currentColor"/>
-            <path d="M8 19 L14 25" stroke="#f0ca78" stroke-width="2.5" stroke-linecap="round"/>
+          <svg class="skill-svg" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" fill="url(#ico-aura-cyan)"/>
+            <path d="M7 29 C16 33, 29 27, 34 10 C31 20, 19 28, 7 29 Z" fill="url(#ico-cyan)"/>
+            <path d="M10 30 L30 9 L33 7 L31 11 L13 31 Z" fill="url(#ico-steel)"/>
+            <path d="M9 24 L16 31" stroke="url(#ico-gold)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="9.5" cy="30.5" r="2" fill="url(#ico-gold)"/>
+            <polygon points="31,18 32.5,21 35.5,22 32.5,23 31,26 29.5,23 26.5,22 29.5,21" fill="#fef3c7"/>
           </svg>
           <span class="skill-name">Corte</span>
           <span class="skill-cd-fill"></span>
@@ -86,10 +132,14 @@
           title="Giro Ciclone 360° (Tecla 2 ou Q)"
         >
           <span class="skill-key">2 / Q</span>
-          <svg class="skill-svg" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M24 11 A9.5 9.5 0 1 0 25 19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <polygon points="26,7 26,14 20,11" fill="#f0ca78"/>
-            <path d="M11 21 L21 11" stroke="#f0ca78" stroke-width="2.6" stroke-linecap="round"/>
+          <svg class="skill-svg" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" fill="url(#ico-aura-cyan)"/>
+            <path d="M31 14 A12 12 0 1 0 31 26" fill="none" stroke="url(#ico-cyan)" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M10 13 A11 11 0 0 1 28 10" fill="none" stroke="url(#ico-gold)" stroke-width="2.4" stroke-linecap="round"/>
+            <polygon points="33,10 33,18 26,14" fill="url(#ico-gold)"/>
+            <path d="M13 27 L27 13" stroke="url(#ico-steel)" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M13 22 L18 27" stroke="url(#ico-gold)" stroke-width="2.6" stroke-linecap="round"/>
+            <circle cx="20" cy="20" r="3" fill="#e0f2fe"/>
           </svg>
           <span class="skill-name">Giro 360°</span>
           <span class="skill-cd-fill"></span>
@@ -103,10 +153,12 @@
           title="Investida Real (Tecla 3 ou E)"
         >
           <span class="skill-key">3 / E</span>
-          <svg class="skill-svg" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M4 22 L17 15" stroke="#f0ca78" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 3"/>
-            <path d="M10 22 L28 7 L22 19 Z" fill="currentColor"/>
-            <path d="M12 16 L16 21" stroke="#f0ca78" stroke-width="2.5" stroke-linecap="round"/>
+          <svg class="skill-svg" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" fill="url(#ico-aura-cyan)"/>
+            <path d="M5 24 L18 17 M6 29 L15 24 M11 15 L19 11" stroke="url(#ico-gold)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M17 12 C23 14, 26 20, 24 27" fill="none" stroke="url(#ico-cyan)" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M11 29 L34 8 L23 23 L17 22 Z" fill="url(#ico-steel)"/>
+            <path d="M12 21 L19 28" stroke="url(#ico-gold)" stroke-width="3" stroke-linecap="round"/>
           </svg>
           <span class="skill-name">Investida</span>
           <span class="skill-cd-fill"></span>
@@ -120,10 +172,14 @@
           title="Ultimate: Julgamento da Alvorada (Tecla 4, R ou Espaço)"
         >
           <span class="skill-key">4 / R</span>
-          <svg class="skill-svg" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M16 3 L19 19 L16 22 L13 19 Z" fill="#fff7d6"/>
-            <path d="M10 19 L22 19" stroke="#f0ca78" stroke-width="2.6" stroke-linecap="round"/>
-            <ellipse cx="16" cy="25.5" rx="11" ry="3.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <svg class="skill-svg" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="url(#ico-aura-gold)"/>
+            <path d="M20 4 L23 19 L20 26 L17 19 Z" fill="url(#ico-ult)"/>
+            <path d="M13 18 L27 18" stroke="url(#ico-gold)" stroke-width="3.2" stroke-linecap="round"/>
+            <line x1="20" y1="8" x2="20" y2="18" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M9 11 L13 14 M31 11 L27 14 M6 21 L11 21 M34 21 L29 21" stroke="#fde68a" stroke-width="1.8" stroke-linecap="round"/>
+            <ellipse cx="20" cy="30" rx="13" ry="4.2" fill="none" stroke="url(#ico-gold)" stroke-width="2.3"/>
+            <ellipse cx="20" cy="30" rx="7" ry="2.2" fill="none" stroke="url(#ico-cyan)" stroke-width="1.8"/>
           </svg>
           <span class="skill-name">ULT</span>
           <span class="skill-cd-fill"></span>
@@ -149,9 +205,11 @@
             data-skill-slot="slash"
             aria-label="Corte da Alvorada"
           >
-            <svg class="touch-svg" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M5 24 Q16 26 27 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-              <path d="M10 21 L25 6 L27 8 L13 24 Z" fill="currentColor"/>
+            <svg class="touch-svg" viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="16" fill="url(#ico-aura-cyan)"/>
+              <path d="M7 29 C16 33, 29 27, 34 10 C31 20, 19 28, 7 29 Z" fill="url(#ico-cyan)"/>
+              <path d="M10 30 L30 9 L33 7 L31 11 L13 31 Z" fill="url(#ico-steel)"/>
+              <path d="M9 24 L16 31" stroke="url(#ico-gold)" stroke-width="3" stroke-linecap="round"/>
             </svg>
             <span class="action-label">CORTE</span>
             <span class="skill-cd-fill"></span>
@@ -165,9 +223,11 @@
             data-skill-slot="spin"
             aria-label="Giro Ciclone 360"
           >
-            <svg class="touch-svg" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M24 11 A9.5 9.5 0 1 0 25 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-              <path d="M11 21 L21 11" stroke="#f0ca78" stroke-width="2.6" stroke-linecap="round"/>
+            <svg class="touch-svg" viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="15" fill="url(#ico-aura-cyan)"/>
+              <path d="M31 14 A12 12 0 1 0 31 26" fill="none" stroke="url(#ico-cyan)" stroke-width="3.2" stroke-linecap="round"/>
+              <polygon points="33,10 33,18 26,14" fill="url(#ico-gold)"/>
+              <path d="M13 27 L27 13" stroke="url(#ico-steel)" stroke-width="3.2" stroke-linecap="round"/>
             </svg>
             <span class="action-label">GIRO</span>
             <span class="skill-cd-fill"></span>
@@ -181,9 +241,11 @@
             data-skill-slot="thrust"
             aria-label="Investida Real"
           >
-            <svg class="touch-svg" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M10 22 L28 7 L22 19 Z" fill="currentColor"/>
-              <path d="M5 22 L14 17" stroke="#f0ca78" stroke-width="2.2" stroke-linecap="round"/>
+            <svg class="touch-svg" viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="15" fill="url(#ico-aura-cyan)"/>
+              <path d="M5 24 L18 17 M6 29 L15 24" stroke="url(#ico-gold)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M11 29 L34 8 L23 23 L17 22 Z" fill="url(#ico-steel)"/>
+              <path d="M12 21 L19 28" stroke="url(#ico-gold)" stroke-width="3" stroke-linecap="round"/>
             </svg>
             <span class="action-label">DASH</span>
             <span class="skill-cd-fill"></span>
@@ -197,9 +259,12 @@
             data-skill-slot="ult"
             aria-label="Ultimate Julgamento da Alvorada"
           >
-            <svg class="touch-svg" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M16 3 L19 19 L16 22 L13 19 Z" fill="#fff7d6"/>
-              <ellipse cx="16" cy="25.5" rx="11" ry="3.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            <svg class="touch-svg" viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="16" fill="url(#ico-aura-gold)"/>
+              <path d="M20 4 L23 19 L20 26 L17 19 Z" fill="url(#ico-ult)"/>
+              <path d="M13 18 L27 18" stroke="url(#ico-gold)" stroke-width="3" stroke-linecap="round"/>
+              <ellipse cx="20" cy="30" rx="13" ry="4.2" fill="none" stroke="url(#ico-gold)" stroke-width="2.3"/>
+              <ellipse cx="20" cy="30" rx="7" ry="2.2" fill="none" stroke="url(#ico-cyan)" stroke-width="1.8"/>
             </svg>
             <span class="action-label">ULT</span>
             <span class="skill-cd-fill"></span>
@@ -212,7 +277,11 @@
             type="button"
             aria-label="Correr"
           >
-            <span class="action-icon" aria-hidden="true">⚡</span>
+            <svg class="touch-svg" viewBox="0 0 36 36" aria-hidden="true">
+              <path d="M11 9 L20 9 L19 19 L27 22 C28.5 22.6 29 24.5 28 26 L9 26 L9 20 L12 18 Z" fill="url(#ico-gold)"/>
+              <path d="M5 13 L12 13 M4 18 L10 18 M6 23 L10 23" stroke="url(#ico-cyan)" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M21 10 L29 6 L25 13 L30 11 L22 17 Z" fill="#fef3c7"/>
+            </svg>
             <span class="action-label">CORRER</span>
           </button>
         </div>

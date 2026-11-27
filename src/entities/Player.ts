@@ -10,6 +10,49 @@ function normalizeAngleDiff(target: number, current: number): number {
   return diff;
 }
 
+const LOWER_BODY_BONES = new Set([
+  'Hips',
+  'LeftUpLeg',
+  'LeftLeg',
+  'LeftFoot',
+  'LeftToeBase',
+  'RightUpLeg',
+  'RightLeg',
+  'RightFoot',
+  'RightToeBase',
+]);
+
+function splitClipByBodyHalf(clip: THREE.AnimationClip): {
+  upper: THREE.AnimationClip;
+  lower: THREE.AnimationClip;
+} {
+  const upperTracks: THREE.KeyframeTrack[] = [];
+  const lowerTracks: THREE.KeyframeTrack[] = [];
+
+  for (const track of clip.tracks) {
+    const dotIdx = track.name.indexOf('.');
+    const boneName = dotIdx >= 0 ? track.name.slice(0, dotIdx) : track.name;
+    if (LOWER_BODY_BONES.has(boneName)) {
+      lowerTracks.push(track);
+    } else {
+      upperTracks.push(track);
+    }
+  }
+
+  return {
+    upper: new THREE.AnimationClip(
+      `${clip.name}_Upper`,
+      clip.duration,
+      upperTracks,
+    ),
+    lower: new THREE.AnimationClip(
+      `${clip.name}_Lower`,
+      clip.duration,
+      lowerTracks,
+    ),
+  };
+}
+
 export interface PlayerEquipmentSockets {
   head: THREE.Group;
   chest: THREE.Group;
@@ -28,6 +71,9 @@ export type PlayerOneShotAction =
   | 'SkillUlt'
   | 'Dodge';
 
+type SlashClipName = 'AttackSlash' | 'AttackSlash2' | 'AttackSlash3';
+type FullBodyClipName = 'SkillSpin' | 'SkillThrust' | 'SkillUlt' | 'Dodge';
+
 export interface SkillMeta {
   slot: SwordSkillSlot;
   clip: PlayerOneShotAction;
@@ -45,10 +91,10 @@ export const SKILL_CONFIG: Record<SwordSkillSlot, SkillMeta> = {
     clip: 'AttackSlash',
     label: 'Corte I',
     cooldown: 0.36,
-    speedFactor: 0.54,
+    speedFactor: 0.9,
     dashSpeed: 0,
     dashDuration: 0,
-    lungeSpeed: 3.1,
+    lungeSpeed: 2.8,
   },
   spin: {
     slot: 'spin',
@@ -89,6 +135,11 @@ export interface SkillRuntimeState {
   active: boolean;
 }
 
+interface SplitActionPair {
+  upper: THREE.AnimationAction;
+  lower: THREE.AnimationAction;
+}
+
 export class Player {
   public readonly group = new THREE.Group();
   public readonly radius = 0.45;
@@ -104,14 +155,18 @@ export class Player {
   private readonly sprintSpeed = 8.4;
 
   private mixer: THREE.AnimationMixer | null = null;
-  private idleAction: THREE.AnimationAction | null = null;
-  private walkAction: THREE.AnimationAction | null = null;
-  private runAction: THREE.AnimationAction | null = null;
-  private readonly oneShotActions = new Map<
-    PlayerOneShotAction,
+  private idlePair: SplitActionPair | null = null;
+  private walkPair: SplitActionPair | null = null;
+  private runPair: SplitActionPair | null = null;
+
+  private readonly slashPairs = new Map<SlashClipName, SplitActionPair>();
+  private readonly fullBodyActions = new Map<
+    FullBodyClipName,
     THREE.AnimationAction
   >();
-  private activeOneShot: THREE.AnimationAction | null = null;
+
+  private activeSlashPair: SplitActionPair | null = null;
+  private activeFullAction: THREE.AnimationAction | null = null;
   private activeSkillSlot: SwordSkillSlot | null = null;
   private activeSkillLabel: string | null = null;
 
@@ -128,9 +183,13 @@ export class Player {
   private dashSpeed = 0;
   private readonly dashDir = new THREE.Vector3();
 
-  private idleWeight = 1;
-  private walkWeight = 0;
-  private runWeight = 0;
+  private idleWeightUpper = 1;
+  private walkWeightUpper = 0;
+  private runWeightUpper = 0;
+  private idleWeightLower = 1;
+  private walkWeightLower = 0;
+  private runWeightLower = 0;
+
   private isSprinting = false;
   private modelReady = false;
 
@@ -275,53 +334,59 @@ export class Player {
       THREE.AnimationClip.findByName(clips, name) ??
       clips.find((c) => c.name.toLowerCase() === name.toLowerCase());
 
-    const idleClip = findClip('Idle') ?? clips[0];
-    const walkClip = findClip('Walk');
-    const runClip = findClip('Run');
+    const makeLoopPair = (
+      clip: THREE.AnimationClip | undefined,
+      initialWeight: number,
+    ): SplitActionPair | null => {
+      if (!clip) return null;
+      const { upper, lower } = splitClipByBodyHalf(clip);
+      const uAct = mixer.clipAction(upper);
+      const lAct = mixer.clipAction(lower);
+      uAct.setLoop(THREE.LoopRepeat, Infinity);
+      lAct.setLoop(THREE.LoopRepeat, Infinity);
+      uAct.setEffectiveWeight(initialWeight);
+      lAct.setEffectiveWeight(initialWeight);
+      uAct.play();
+      lAct.play();
+      return { upper: uAct, lower: lAct };
+    };
 
-    if (idleClip) {
-      this.idleAction = mixer.clipAction(idleClip);
-      this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
-      this.idleAction.setEffectiveWeight(1);
-      this.idleAction.play();
+    this.idlePair = makeLoopPair(findClip('Idle') ?? clips[0], 1);
+    this.walkPair = makeLoopPair(findClip('Walk'), 0);
+    this.runPair = makeLoopPair(findClip('Run'), 0);
+
+    for (const name of ['AttackSlash', 'AttackSlash2', 'AttackSlash3'] as const) {
+      const clip = findClip(name);
+      if (!clip) continue;
+      const { upper, lower } = splitClipByBodyHalf(clip);
+      const uAct = mixer.clipAction(upper);
+      const lAct = mixer.clipAction(lower);
+      uAct.setLoop(THREE.LoopOnce, 1);
+      lAct.setLoop(THREE.LoopOnce, 1);
+      uAct.clampWhenFinished = true;
+      lAct.clampWhenFinished = true;
+      this.slashPairs.set(name, { upper: uAct, lower: lAct });
     }
 
-    if (walkClip) {
-      this.walkAction = mixer.clipAction(walkClip);
-      this.walkAction.setLoop(THREE.LoopRepeat, Infinity);
-      this.walkAction.setEffectiveWeight(0);
-      this.walkAction.play();
-    }
-
-    if (runClip) {
-      this.runAction = mixer.clipAction(runClip);
-      this.runAction.setLoop(THREE.LoopRepeat, Infinity);
-      this.runAction.setEffectiveWeight(0);
-      this.runAction.play();
-    }
-
-    for (const actionName of [
-      'AttackSlash',
-      'AttackSlash2',
-      'AttackSlash3',
-      'SkillSpin',
-      'SkillThrust',
-      'SkillUlt',
-      'Dodge',
-    ] as const) {
-      const clip = findClip(actionName);
-      if (clip) {
-        const action = mixer.clipAction(clip);
-        action.setLoop(THREE.LoopOnce, 1);
-        action.clampWhenFinished = true;
-        this.oneShotActions.set(actionName, action);
-      }
+    for (const name of ['SkillSpin', 'SkillThrust', 'SkillUlt', 'Dodge'] as const) {
+      const clip = findClip(name);
+      if (!clip) continue;
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      this.fullBodyActions.set(name, action);
     }
 
     mixer.addEventListener('finished', (event) => {
-      if (event.action === this.activeOneShot) {
-        this.activeOneShot.fadeOut(0.14);
-        this.activeOneShot = null;
+      if (this.activeSlashPair && event.action === this.activeSlashPair.upper) {
+        this.activeSlashPair.upper.fadeOut(0.12);
+        this.activeSlashPair.lower.fadeOut(0.12);
+        this.activeSlashPair = null;
+        this.activeSkillSlot = null;
+        this.activeSkillLabel = null;
+      } else if (this.activeFullAction && event.action === this.activeFullAction) {
+        this.activeFullAction.fadeOut(0.14);
+        this.activeFullAction = null;
         this.activeSkillSlot = null;
         this.activeSkillLabel = null;
       }
@@ -332,6 +397,18 @@ export class Player {
 
   public isModelLoaded(): boolean {
     return this.modelReady;
+  }
+
+  private stopActiveOneShots(): void {
+    if (this.activeSlashPair) {
+      this.activeSlashPair.upper.stop();
+      this.activeSlashPair.lower.stop();
+      this.activeSlashPair = null;
+    }
+    if (this.activeFullAction) {
+      this.activeFullAction.stop();
+      this.activeFullAction = null;
+    }
   }
 
   public useSkill(slot: SwordSkillSlot, aimWorldDir?: THREE.Vector3): boolean {
@@ -384,12 +461,14 @@ export class Player {
     const yaw = this.bodyPivot.rotation.y;
     const fwdX = Math.sin(yaw);
     const fwdZ = Math.cos(yaw);
+    const currentSpeed = this.velocity.length();
 
     if (meta.dashDuration > 0 && meta.dashSpeed > 0) {
       this.dashDir.set(fwdX, 0, fwdZ);
       this.dashSpeed = meta.dashSpeed;
       this.dashTimer = meta.dashDuration;
-    } else if (meta.lungeSpeed > 0) {
+    } else if (meta.lungeSpeed > 0 && currentSpeed < 1.2) {
+      // Aplica passo curto à frente apenas quando ataca quase parado (em corrida as pernas correm livres)
       const bonus = comboStepForVfx === 3 ? 1.45 : 1.0;
       this.velocity.x += fwdX * meta.lungeSpeed * bonus;
       this.velocity.z += fwdZ * meta.lungeSpeed * bonus;
@@ -414,17 +493,38 @@ export class Player {
   }
 
   public triggerAction(name: PlayerOneShotAction): boolean {
-    const action = this.oneShotActions.get(name);
-    if (!action) return false;
+    if (name === 'AttackSlash' || name === 'AttackSlash2' || name === 'AttackSlash3') {
+      const pair = this.slashPairs.get(name);
+      if (!pair) return false;
+      this.stopActiveOneShots();
 
-    if (this.activeOneShot && this.activeOneShot !== action) {
-      this.activeOneShot.stop();
+      const moveBlend = THREE.MathUtils.smoothstep(
+        this.velocity.length(),
+        0.35,
+        1.35,
+      );
+      pair.upper.reset();
+      pair.upper.setEffectiveTimeScale(1);
+      pair.upper.setEffectiveWeight(1);
+      pair.upper.fadeIn(0.05).play();
+
+      pair.lower.reset();
+      pair.lower.setEffectiveTimeScale(1);
+      pair.lower.setEffectiveWeight(1 - moveBlend);
+      pair.lower.fadeIn(0.05).play();
+
+      this.activeSlashPair = pair;
+      return true;
     }
+
+    const action = this.fullBodyActions.get(name);
+    if (!action) return false;
+    this.stopActiveOneShots();
     action.reset();
     action.setEffectiveTimeScale(1);
     action.setEffectiveWeight(1);
     action.fadeIn(0.05).play();
-    this.activeOneShot = action;
+    this.activeFullAction = action;
     return true;
   }
 
@@ -528,37 +628,79 @@ export class Player {
       }
     }
 
-    const oneShotScale = this.activeOneShot
-      ? this.activeSkillSlot === 'spin' || this.activeSkillSlot === 'ult'
-        ? 0.02
-        : 0.08
-      : 1;
-    const blendAlpha = 1 - Math.exp(-15 * dt);
+    const blendAlpha = 1 - Math.exp(-16 * dt);
 
-    this.idleWeight += (targetIdle * oneShotScale - this.idleWeight) * blendAlpha;
-    this.walkWeight += (targetWalk * oneShotScale - this.walkWeight) * blendAlpha;
-    this.runWeight += (targetRun * oneShotScale - this.runWeight) * blendAlpha;
+    if (this.activeSlashPair) {
+      // Parte superior: 100% no ataque; Parte inferior: mistura dinamicamente entre base do golpe (parado) e corrida/caminhada (em movimento)!
+      const moveBlend = THREE.MathUtils.smoothstep(speed, 0.35, 1.35);
+      this.activeSlashPair.upper.setEffectiveWeight(1);
+      this.activeSlashPair.lower.setEffectiveWeight(1 - moveBlend);
 
-    this.idleAction?.setEffectiveWeight(this.idleWeight);
+      this.idleWeightUpper += (0 - this.idleWeightUpper) * blendAlpha;
+      this.walkWeightUpper += (0 - this.walkWeightUpper) * blendAlpha;
+      this.runWeightUpper += (0 - this.runWeightUpper) * blendAlpha;
 
-    if (this.walkAction) {
-      this.walkAction.setEffectiveWeight(this.walkWeight);
+      this.idleWeightLower +=
+        (targetIdle * moveBlend - this.idleWeightLower) * blendAlpha;
+      this.walkWeightLower +=
+        (targetWalk * moveBlend - this.walkWeightLower) * blendAlpha;
+      this.runWeightLower +=
+        (targetRun * moveBlend - this.runWeightLower) * blendAlpha;
+    } else if (this.activeFullAction) {
+      const baseScale = 0.02;
+      this.idleWeightUpper +=
+        (targetIdle * baseScale - this.idleWeightUpper) * blendAlpha;
+      this.walkWeightUpper +=
+        (targetWalk * baseScale - this.walkWeightUpper) * blendAlpha;
+      this.runWeightUpper +=
+        (targetRun * baseScale - this.runWeightUpper) * blendAlpha;
+
+      this.idleWeightLower +=
+        (targetIdle * baseScale - this.idleWeightLower) * blendAlpha;
+      this.walkWeightLower +=
+        (targetWalk * baseScale - this.walkWeightLower) * blendAlpha;
+      this.runWeightLower +=
+        (targetRun * baseScale - this.runWeightLower) * blendAlpha;
+    } else {
+      this.idleWeightUpper += (targetIdle - this.idleWeightUpper) * blendAlpha;
+      this.walkWeightUpper += (targetWalk - this.walkWeightUpper) * blendAlpha;
+      this.runWeightUpper += (targetRun - this.runWeightUpper) * blendAlpha;
+
+      this.idleWeightLower += (targetIdle - this.idleWeightLower) * blendAlpha;
+      this.walkWeightLower += (targetWalk - this.walkWeightLower) * blendAlpha;
+      this.runWeightLower += (targetRun - this.runWeightLower) * blendAlpha;
+    }
+
+    if (this.idlePair) {
+      this.idlePair.upper.setEffectiveWeight(this.idleWeightUpper);
+      this.idlePair.lower.setEffectiveWeight(this.idleWeightLower);
+      this.idlePair.upper.time = this.idlePair.lower.time;
+    }
+
+    if (this.walkPair) {
       const walkTimeScale = THREE.MathUtils.clamp(
         speed / (this.walkSpeed * 0.72),
         0.75,
         1.45,
       );
-      this.walkAction.setEffectiveTimeScale(walkTimeScale);
+      this.walkPair.upper.setEffectiveWeight(this.walkWeightUpper);
+      this.walkPair.lower.setEffectiveWeight(this.walkWeightLower);
+      this.walkPair.upper.setEffectiveTimeScale(walkTimeScale);
+      this.walkPair.lower.setEffectiveTimeScale(walkTimeScale);
+      this.walkPair.upper.time = this.walkPair.lower.time;
     }
 
-    if (this.runAction) {
-      this.runAction.setEffectiveWeight(this.runWeight);
+    if (this.runPair) {
       const runTimeScale = THREE.MathUtils.clamp(
         speed / (this.sprintSpeed * 0.86),
         0.85,
         1.38,
       );
-      this.runAction.setEffectiveTimeScale(runTimeScale);
+      this.runPair.upper.setEffectiveWeight(this.runWeightUpper);
+      this.runPair.lower.setEffectiveWeight(this.runWeightLower);
+      this.runPair.upper.setEffectiveTimeScale(runTimeScale);
+      this.runPair.lower.setEffectiveTimeScale(runTimeScale);
+      this.runPair.upper.time = this.runPair.lower.time;
     }
 
     this.mixer.update(dt);

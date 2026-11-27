@@ -181,11 +181,11 @@ export class Game {
       ref.root.classList.toggle('on-cooldown', !state.ready);
 
       if (ref.overlay) {
-        const pct =
+        const deg =
           state.cooldownTotal > 0
-            ? (state.cooldownRemaining / state.cooldownTotal) * 100
+            ? (state.cooldownRemaining / state.cooldownTotal) * 360
             : 0;
-        ref.overlay.style.height = `${pct.toFixed(1)}%`;
+        ref.overlay.style.setProperty('--cd-deg', `${deg.toFixed(1)}deg`);
       }
       if (ref.timerText) {
         ref.timerText.textContent = state.ready

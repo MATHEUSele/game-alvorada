@@ -12,7 +12,7 @@ Componentes principais:
 - **Câmera (`src/camera/`):**
   - `IsometricCamera.ts`: câmera em perspectiva isométrica próxima com suavização exponencial, zoom dinâmico e projeção de entrada de tela para o plano `XZ`.
 - **Entidades (`src/entities/`):**
-  - `Player.ts`: protagonista 3D carregado via `GLTFLoader` (`public/models/protagonist.glb`), arma `Weapon_Dawnblade` presa ao osso `Weapon_R`, animação esquelética com `AnimationMixer` (`Idle`, `Walk`, `Run`, `Dodge`, `AttackSlash`, `AttackSlash2`, `AttackSlash3`, `SkillSpin`, `SkillThrust`, `SkillUlt`) e sockets presos a ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`).
+  - `Player.ts`: protagonista 3D carregado via `GLTFLoader` (`public/models/protagonist.glb`), arma `Weapon_Dawnblade` presa ao osso `Weapon_R`, animação esquelética em camadas (`UpperBody` / `LowerBody` via `AnimationMixer`) permitindo ataques em movimento sem *foot-sliding* (`Idle`, `Walk`, `Run`, `Dodge`, `AttackSlash`, `AttackSlash2`, `AttackSlash3`, `SkillSpin`, `SkillThrust`, `SkillUlt`) e sockets presos a ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`).
   - `SwordVfx.ts`: efeitos visuais 3D em Three.js com textura procedural de rastro crescente estilo LoL para o combo de 3 golpes do Corte Simples, ciclone circular 360°, feixe perfurante e onda de choque/pilar da Ultimate.
 - **Mundo (`src/world/`):**
   - `HubMap.ts`: cenário da Home (*Salão Real da Alvorada*), portas monumentais (Portal das Masmorras, Forja, Loja), partículas de poeira/pétalas, Jardim Real externo e zonas de interação.
@@ -42,7 +42,9 @@ game-alvorada/
 ├── public/
 │   ├── manifest.webmanifest    # Manifesto PWA mobile
 │   └── models/
-│       └── protagonist.glb     # Protagonista rigado e animado (22 ossos, 5 clipes)
+│       ├── protagonist.glb     # Protagonista rigado e animado (23 ossos, 10 clipes)
+│       ├── items/              # Itens, armaduras, armas, baús e poções CC0 (.glb)
+│       └── characters/         # NPCs e inimigos iniciais CC0 (.glb)
 ├── src/
 │   ├── camera/
 │   │   └── IsometricCamera.ts
