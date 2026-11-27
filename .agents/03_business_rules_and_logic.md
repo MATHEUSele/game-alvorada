@@ -26,7 +26,7 @@
 - **Máquina de estados / blend de animações (`Player.updateAnimations`):**
   - Estados locomotores contínuos (`Idle`, `Walk`, `Run`) em `LoopRepeat` com interpolação `blendAlpha = 1 - Math.exp(-12 * dt)`.
   - Abaixo de `speed <= 0.35`: alvo `Idle = 1`. Em caminhada: `Walk = clamp(speed / walkSpeed, 0.25, 1)` e `Idle = 1 - Walk`, com `timeScale` em `[0.75, 1.45]`. Em corrida (`isSprinting` ou `speed > walkSpeed * 1.12`): `Run = 1` com `timeScale` em `[0.85, 1.4]`.
-  - Ações one-shot (`AttackCombo`, `Dodge`) via `triggerAction(...)` em `LoopOnce` (`clampWhenFinished = true`), reduzindo temporariamente o peso das ações base para `0.15` até o evento `finished`.
+  - Ações one-shot e poderes de espada (`AttackSlash`, `SkillSpin`, `SkillThrust`, `SkillUlt`, `Dodge`) via `useSkill(slot)` em `LoopOnce` (`clampWhenFinished = true`), com `cooldowns` (`0.65s` Corte, `3.5s` Giro 360°, `4.5s` Investida, `9.0s` Ultimate), cancelamento fluido do Corte básico para outras habilidades e movimentação livre durante `SkillSpin` (`speedFactor = 0.92`). Atalhos PC (`1–4`, `J`, `Q`, `E`, `R`, `Espaço`) + botões clicáveis e cluster radial multi-touch no celular.
 - **Colisão com deslizamento suave (`resolveCollisions`):** garante `dist <= boundsRadius - playerRadius`, empurra fora de cada `BoxCollider` usando o ponto mais próximo (tratando penetração total pelo menor eixo) e resolve cada `CircleCollider` somando `playerRadius + c.radius`.
 
 ## 4. Exceções e mensagens de erro de negócio

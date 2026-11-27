@@ -1,14 +1,25 @@
+import type { SwordSkillSlot } from '../entities/Player';
+
 export interface TouchInputState {
   x: number;
   y: number;
   sprint: boolean;
 }
 
+const TOUCH_SKILL_BUTTON_IDS: Array<[string, SwordSkillSlot]> = [
+  ['touch-skill-slash', 'slash'],
+  ['touch-skill-spin', 'spin'],
+  ['touch-skill-thrust', 'thrust'],
+  ['touch-skill-ult', 'ult'],
+];
+
 export class TouchControls {
   private readonly joyZone: HTMLElement | null;
   private readonly joyBase: HTMLElement | null;
   private readonly joyKnob: HTMLElement | null;
   private readonly sprintBtn: HTMLElement | null;
+  private readonly skillButtons = new Map<HTMLElement, SwordSkillSlot>();
+  private readonly pendingSkills: SwordSkillSlot[] = [];
 
   private joyPointerId: number | null = null;
   private sprintPointerId: number | null = null;
@@ -52,12 +63,38 @@ export class TouchControls {
       this.sprintBtn.addEventListener('pointercancel', this.onSprintUp);
       this.sprintBtn.addEventListener('lostpointercapture', this.onSprintUp);
     }
+
+    for (const [id, slot] of TOUCH_SKILL_BUTTON_IDS) {
+      const btn = document.getElementById(id);
+      if (!btn) continue;
+      this.skillButtons.set(btn, slot);
+      btn.addEventListener('pointerdown', this.onSkillDown);
+      btn.addEventListener('pointerup', this.onSkillUp);
+      btn.addEventListener('pointercancel', this.onSkillUp);
+    }
   }
 
   private onFirstTouchPointer = (event: PointerEvent): void => {
     if (event.pointerType === 'touch') {
       document.body.classList.add('is-touch');
     }
+  };
+
+  private onSkillDown = (event: PointerEvent): void => {
+    const btn = event.currentTarget as HTMLElement | null;
+    if (!btn) return;
+    event.preventDefault();
+    document.body.classList.add('is-touch');
+    const slot = this.skillButtons.get(btn);
+    if (slot) {
+      this.pendingSkills.push(slot);
+      btn.classList.add('pressed');
+    }
+  };
+
+  private onSkillUp = (event: PointerEvent): void => {
+    const btn = event.currentTarget as HTMLElement | null;
+    btn?.classList.remove('pressed');
   };
 
   private onJoyDown = (event: PointerEvent): void => {
@@ -149,6 +186,11 @@ export class TouchControls {
     };
   }
 
+  public consumeSkills(): SwordSkillSlot[] {
+    if (this.pendingSkills.length === 0) return [];
+    return this.pendingSkills.splice(0, this.pendingSkills.length);
+  }
+
   public dispose(): void {
     window.removeEventListener('pointerdown', this.onFirstTouchPointer);
     if (this.joyZone) {
@@ -162,6 +204,11 @@ export class TouchControls {
       this.sprintBtn.removeEventListener('pointerup', this.onSprintUp);
       this.sprintBtn.removeEventListener('pointercancel', this.onSprintUp);
       this.sprintBtn.removeEventListener('lostpointercapture', this.onSprintUp);
+    }
+    for (const btn of this.skillButtons.keys()) {
+      btn.removeEventListener('pointerdown', this.onSkillDown);
+      btn.removeEventListener('pointerup', this.onSkillUp);
+      btn.removeEventListener('pointercancel', this.onSkillUp);
     }
   }
 }

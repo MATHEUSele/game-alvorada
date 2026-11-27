@@ -12,7 +12,8 @@ Componentes principais:
 - **Câmera (`src/camera/`):**
   - `IsometricCamera.ts`: câmera em perspectiva isométrica próxima com suavização exponencial, zoom dinâmico e projeção de entrada de tela para o plano `XZ`.
 - **Entidades (`src/entities/`):**
-  - `Player.ts`: protagonista 3D carregado via `GLTFLoader` (`public/models/protagonist.glb`), animação esquelética com `AnimationMixer` (`Idle`, `Walk`, `Run`, `AttackCombo`, `Dodge`) e sockets presos a ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`).
+  - `Player.ts`: protagonista 3D carregado via `GLTFLoader` (`public/models/protagonist.glb`), arma `Weapon_Dawnblade` presa ao osso `Weapon_R`, animação esquelética com `AnimationMixer` (`Idle`, `Walk`, `Run`, `Dodge`, `AttackSlash`, `SkillSpin`, `SkillThrust`, `SkillUlt`) e sockets presos a ossos reais (`head`, `chest`, `back`, `rightHand`, `leftHand`).
+  - `SwordVfx.ts`: efeitos visuais 3D em Three.js para os 4 poderes de espada (arco cortante, ciclone circular 360°, feixe perfurante e onda de choque/pilar da Ultimate).
 - **Mundo (`src/world/`):**
   - `HubMap.ts`: cenário da Home (*Salão Real da Alvorada*), portas monumentais (Portal das Masmorras, Forja, Loja), partículas de poeira/pétalas, Jardim Real externo e zonas de interação.
   - `Collision.ts`: resolução de colisão círculo-vs-círculo e círculo-vs-AABB com deslizamento suave (*wall-sliding*) e limite circular da rotunda.
@@ -51,7 +52,8 @@ game-alvorada/
 │   │   ├── MobileUi.ts
 │   │   └── TouchControls.ts
 │   ├── entities/
-│   │   └── Player.ts
+│   │   ├── Player.ts
+│   │   └── SwordVfx.ts
 │   ├── world/
 │   │   ├── Collision.ts
 │   │   ├── HubMap.ts

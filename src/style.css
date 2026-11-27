@@ -336,59 +336,240 @@ kbd {
 
 .touch-actions-zone {
   position: fixed;
-  right: max(22px, env(safe-area-inset-right));
-  bottom: max(28px, env(safe-area-inset-bottom));
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  pointer-events: auto;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 224px;
+  height: 224px;
+  pointer-events: none;
   touch-action: none;
 }
 
-.touch-action-btn {
-  width: 88px;
-  height: 88px;
+.touch-action-btn,
+.touch-skill-btn {
+  position: relative;
+  overflow: hidden;
   border-radius: 50%;
-  border: 2px solid rgba(240, 202, 120, 0.65);
+  border: 2px solid rgba(240, 202, 120, 0.72);
   background: radial-gradient(
     circle at 35% 30%,
-    rgba(38, 66, 120, 0.84),
-    rgba(16, 27, 48, 0.88)
+    rgba(38, 66, 120, 0.88),
+    rgba(16, 27, 48, 0.92)
   );
-  color: var(--gold);
+  color: #a8e4ff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   font-family: system-ui, -apple-system, sans-serif;
-  box-shadow: 0 8px 24px rgba(12, 20, 38, 0.4);
+  box-shadow: 0 8px 24px rgba(12, 20, 38, 0.44);
   backdrop-filter: blur(4px);
   cursor: pointer;
+  pointer-events: auto;
   touch-action: none;
   transition: transform 0.1s ease, border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
+.touch-skill-btn {
+  position: absolute;
+}
+
+.touch-skill-main {
+  right: 8px;
+  bottom: 8px;
+  width: 84px;
+  height: 84px;
+}
+
+.touch-skill-arc-1 {
+  right: 112px;
+  bottom: 12px;
+  width: 62px;
+  height: 62px;
+}
+
+.touch-skill-arc-2 {
+  right: 96px;
+  bottom: 88px;
+  width: 62px;
+  height: 62px;
+}
+
+.touch-skill-arc-ult {
+  right: 22px;
+  bottom: 114px;
+  width: 72px;
+  height: 72px;
+  border-color: #fbbf24;
+  color: #fde68a;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(154, 92, 24, 0.88),
+    rgba(28, 22, 48, 0.94)
+  );
+}
+
+.touch-sprint-mini {
+  position: absolute;
+  right: 170px;
+  bottom: 82px;
+  width: 52px;
+  height: 52px;
+  color: var(--gold);
+}
+
+.touch-svg {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.touch-skill-main .touch-svg {
+  width: 30px;
+  height: 30px;
+}
+
 .touch-action-btn .action-icon {
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1;
 }
 
-.touch-action-btn .action-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.touch-action-btn .action-label,
+.touch-skill-btn .action-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  position: relative;
+  z-index: 2;
 }
 
-.touch-action-btn.active {
-  transform: scale(0.94);
+.touch-action-btn.active,
+.touch-skill-btn.pressed,
+.touch-skill-btn.is-active {
+  transform: scale(0.92);
   border-color: #ffe29a;
-  background: radial-gradient(
-    circle at 35% 30%,
-    rgba(214, 162, 68, 0.48),
-    rgba(24, 42, 76, 0.94)
-  );
-  box-shadow: 0 0 24px rgba(240, 202, 120, 0.52);
+  box-shadow: 0 0 24px rgba(240, 202, 120, 0.65);
+}
+
+/* Barra de habilidades PC */
+.skill-bar-pc {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(12, 22, 42, 0.36);
+  z-index: 18;
+}
+
+.skill-btn-pc {
+  position: relative;
+  overflow: hidden;
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(143, 192, 255, 0.55);
+  background: linear-gradient(160deg, rgba(30, 54, 102, 0.9), rgba(14, 24, 46, 0.94));
+  color: #8fdcff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.skill-btn-pc:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.skill-btn-pc:active,
+.skill-btn-pc.is-active {
+  transform: scale(0.95);
+  border-color: #ffe59e;
+  box-shadow: 0 0 18px rgba(92, 225, 255, 0.55);
+}
+
+.skill-btn-pc.skill-ult {
+  width: 78px;
+  height: 74px;
+  border-color: #f0ca78;
+  color: #fde68a;
+  background: linear-gradient(160deg, rgba(136, 78, 22, 0.92), rgba(24, 20, 48, 0.95));
+}
+
+.skill-btn-pc.skill-ult.is-active {
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.72);
+}
+
+.skill-key {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gold);
+  opacity: 0.9;
+  z-index: 3;
+}
+
+.skill-svg {
+  width: 28px;
+  height: 28px;
+  margin-top: 4px;
+  position: relative;
+  z-index: 2;
+}
+
+.skill-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  position: relative;
+  z-index: 2;
+}
+
+.skill-cd-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0%;
+  background: rgba(8, 13, 24, 0.74);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.skill-cd-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.skill-btn-pc.on-cooldown,
+.touch-skill-btn.on-cooldown {
+  filter: saturate(0.45);
 }
 
 /* Ativação automática no modo Touch (Celular/Tablet) */
@@ -397,6 +578,7 @@ body.is-touch .touch-controls {
 }
 
 body.is-touch .hud-bottom-left,
+body.is-touch .skill-bar-pc,
 body.is-touch #qr-open-btn,
 body.is-touch #qr-modal {
   display: none !important;
@@ -408,7 +590,7 @@ body.is-touch .mobile-only {
 
 .dungeon-prompt {
   position: fixed;
-  bottom: 34px;
+  bottom: 112px;
   left: 50%;
   transform: translate(-50%, 10px);
   pointer-events: none;

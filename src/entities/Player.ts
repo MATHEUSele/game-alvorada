@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { SwordVfx, type SwordSkillType } from './SwordVfx';
 
 function normalizeAngleDiff(target: number, current: number): number {
   let diff = target - current;
@@ -17,7 +18,74 @@ export interface PlayerEquipmentSockets {
   leftHand: THREE.Group;
 }
 
-export type PlayerOneShotAction = 'AttackCombo' | 'Dodge';
+export type SwordSkillSlot = SwordSkillType;
+export type PlayerOneShotAction =
+  | 'AttackSlash'
+  | 'SkillSpin'
+  | 'SkillThrust'
+  | 'SkillUlt'
+  | 'Dodge';
+
+export interface SkillMeta {
+  slot: SwordSkillSlot;
+  clip: PlayerOneShotAction;
+  label: string;
+  cooldown: number;
+  speedFactor: number;
+  dashSpeed: number;
+  dashDuration: number;
+  lungeSpeed: number;
+}
+
+export const SKILL_CONFIG: Record<SwordSkillSlot, SkillMeta> = {
+  slash: {
+    slot: 'slash',
+    clip: 'AttackSlash',
+    label: 'Corte da Alvorada',
+    cooldown: 0.65,
+    speedFactor: 0.48,
+    dashSpeed: 0,
+    dashDuration: 0,
+    lungeSpeed: 2.8,
+  },
+  spin: {
+    slot: 'spin',
+    clip: 'SkillSpin',
+    label: 'Giro Ciclone 360°',
+    cooldown: 3.5,
+    speedFactor: 0.92,
+    dashSpeed: 0,
+    dashDuration: 0,
+    lungeSpeed: 0,
+  },
+  thrust: {
+    slot: 'thrust',
+    clip: 'SkillThrust',
+    label: 'Investida Real',
+    cooldown: 4.5,
+    speedFactor: 0.3,
+    dashSpeed: 13.5,
+    dashDuration: 0.26,
+    lungeSpeed: 0,
+  },
+  ult: {
+    slot: 'ult',
+    clip: 'SkillUlt',
+    label: 'ULT: Julgamento',
+    cooldown: 9.0,
+    speedFactor: 0.25,
+    dashSpeed: 5.5,
+    dashDuration: 0.28,
+    lungeSpeed: 0,
+  },
+};
+
+export interface SkillRuntimeState {
+  cooldownRemaining: number;
+  cooldownTotal: number;
+  ready: boolean;
+  active: boolean;
+}
 
 export class Player {
   public readonly group = new THREE.Group();
@@ -26,6 +94,7 @@ export class Player {
 
   private readonly bodyPivot = new THREE.Group();
   private readonly baseRing: THREE.Mesh;
+  private readonly swordVfx = new SwordVfx();
 
   private readonly velocity = new THREE.Vector3();
   private readonly targetVelocity = new THREE.Vector3();
@@ -41,6 +110,17 @@ export class Player {
     THREE.AnimationAction
   >();
   private activeOneShot: THREE.AnimationAction | null = null;
+  private activeSkillSlot: SwordSkillSlot | null = null;
+
+  private readonly cooldowns: Record<SwordSkillSlot, number> = {
+    slash: 0,
+    spin: 0,
+    thrust: 0,
+    ult: 0,
+  };
+  private dashTimer = 0;
+  private dashSpeed = 0;
+  private readonly dashDir = new THREE.Vector3();
 
   private idleWeight = 1;
   private walkWeight = 0;
@@ -74,6 +154,7 @@ export class Player {
     arrow.rotation.x = Math.PI / 2;
     arrow.position.set(0, 0.025, 0.61);
     this.bodyPivot.add(arrow);
+    this.bodyPivot.add(this.swordVfx.group);
 
     this.group.add(this.bodyPivot);
 
@@ -216,7 +297,13 @@ export class Player {
       this.runAction.play();
     }
 
-    for (const actionName of ['AttackCombo', 'Dodge'] as const) {
+    for (const actionName of [
+      'AttackSlash',
+      'SkillSpin',
+      'SkillThrust',
+      'SkillUlt',
+      'Dodge',
+    ] as const) {
       const clip = findClip(actionName);
       if (clip) {
         const action = mixer.clipAction(clip);
@@ -230,6 +317,7 @@ export class Player {
       if (event.action === this.activeOneShot) {
         this.activeOneShot.fadeOut(0.14);
         this.activeOneShot = null;
+        this.activeSkillSlot = null;
       }
     });
 
@@ -238,6 +326,59 @@ export class Player {
 
   public isModelLoaded(): boolean {
     return this.modelReady;
+  }
+
+  public useSkill(slot: SwordSkillSlot, aimWorldDir?: THREE.Vector3): boolean {
+    if (this.cooldowns[slot] > 0) return false;
+
+    // Permite cancelar o ataque básico (slash) com outra skill para combos ágeis estilo LoL
+    if (
+      this.activeSkillSlot !== null &&
+      this.activeSkillSlot !== 'slash'
+    ) {
+      return false;
+    }
+
+    const meta = SKILL_CONFIG[slot];
+    if (aimWorldDir && aimWorldDir.lengthSq() > 1e-4) {
+      this.bodyPivot.rotation.y = Math.atan2(aimWorldDir.x, aimWorldDir.z);
+    }
+
+    this.cooldowns[slot] = meta.cooldown;
+    this.activeSkillSlot = slot;
+    this.triggerAction(meta.clip);
+    this.swordVfx.trigger(slot);
+
+    const yaw = this.bodyPivot.rotation.y;
+    const fwdX = Math.sin(yaw);
+    const fwdZ = Math.cos(yaw);
+
+    if (meta.dashDuration > 0 && meta.dashSpeed > 0) {
+      this.dashDir.set(fwdX, 0, fwdZ);
+      this.dashSpeed = meta.dashSpeed;
+      this.dashTimer = meta.dashDuration;
+    } else if (meta.lungeSpeed > 0) {
+      this.velocity.x += fwdX * meta.lungeSpeed;
+      this.velocity.z += fwdZ * meta.lungeSpeed;
+    }
+
+    return true;
+  }
+
+  public getSkillState(slot: SwordSkillSlot): SkillRuntimeState {
+    const total = SKILL_CONFIG[slot].cooldown;
+    const remaining = Math.max(0, this.cooldowns[slot]);
+    return {
+      cooldownRemaining: remaining,
+      cooldownTotal: total,
+      ready: remaining <= 0.001,
+      active: this.activeSkillSlot === slot,
+    };
+  }
+
+  public getActiveSkillLabel(): string | null {
+    if (!this.activeSkillSlot) return null;
+    return SKILL_CONFIG[this.activeSkillSlot].label;
   }
 
   public triggerAction(name: PlayerOneShotAction): boolean {
@@ -250,7 +391,7 @@ export class Player {
     action.reset();
     action.setEffectiveTimeScale(1);
     action.setEffectiveWeight(1);
-    action.fadeIn(0.08).play();
+    action.fadeIn(0.06).play();
     this.activeOneShot = action;
     return true;
   }
@@ -273,8 +414,19 @@ export class Player {
     dt: number,
     elapsed: number,
   ): void {
+    // Atualiza cooldowns das 4 habilidades
+    for (const slot of ['slash', 'spin', 'thrust', 'ult'] as const) {
+      if (this.cooldowns[slot] > 0) {
+        this.cooldowns[slot] = Math.max(0, this.cooldowns[slot] - dt);
+      }
+    }
+
     this.isSprinting = sprint;
-    const targetSpeed = sprint ? this.sprintSpeed : this.walkSpeed;
+    const baseSpeed = sprint ? this.sprintSpeed : this.walkSpeed;
+    const skillSpeedFactor = this.activeSkillSlot
+      ? SKILL_CONFIG[this.activeSkillSlot].speedFactor
+      : 1;
+    const targetSpeed = baseSpeed * skillSpeedFactor;
 
     if (worldMoveDir.lengthSq() > 1e-6) {
       this.targetVelocity.copy(worldMoveDir).multiplyScalar(targetSpeed);
@@ -289,11 +441,18 @@ export class Player {
     this.group.position.x += this.velocity.x * dt;
     this.group.position.z += this.velocity.z * dt;
 
+    // Impulso direcional de skills (Investida / Ult)
+    if (this.dashTimer > 0) {
+      this.dashTimer = Math.max(0, this.dashTimer - dt);
+      this.group.position.x += this.dashDir.x * this.dashSpeed * dt;
+      this.group.position.z += this.dashDir.z * this.dashSpeed * dt;
+    }
+
     const speed = this.velocity.length();
     let angularDiff = 0;
 
     // Rotação suave pelo menor ângulo + leve inclinação em curvas
-    if (speed > 0.2) {
+    if (speed > 0.2 && this.activeSkillSlot !== 'thrust' && this.activeSkillSlot !== 'ult') {
       const targetYaw = Math.atan2(this.velocity.x, this.velocity.z);
       angularDiff = normalizeAngleDiff(targetYaw, this.bodyPivot.rotation.y);
       const rotAlpha = 1 - Math.exp(-15 * dt);
@@ -308,6 +467,7 @@ export class Player {
     // Pulso discreto no anel de base
     this.baseRing.scale.setScalar(1 + Math.sin(elapsed * 2.5) * 0.015);
 
+    this.swordVfx.update(dt);
     this.updateAnimations(speed, dt);
   }
 
@@ -331,8 +491,13 @@ export class Player {
       }
     }
 
-    const oneShotScale = this.activeOneShot ? 0.15 : 1;
-    const blendAlpha = 1 - Math.exp(-12 * dt);
+    // Durante habilidades de ataque, reduz peso da base para priorizar o movimento da espada
+    const oneShotScale = this.activeOneShot
+      ? this.activeSkillSlot === 'spin'
+        ? 0.04
+        : 0.12
+      : 1;
+    const blendAlpha = 1 - Math.exp(-14 * dt);
 
     this.idleWeight += (targetIdle * oneShotScale - this.idleWeight) * blendAlpha;
     this.walkWeight += (targetWalk * oneShotScale - this.walkWeight) * blendAlpha;

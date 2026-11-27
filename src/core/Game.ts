@@ -1,10 +1,17 @@
 import * as THREE from 'three';
 import { IsometricCamera } from '../camera/IsometricCamera';
-import { Player } from '../entities/Player';
+import { Player, type SwordSkillSlot } from '../entities/Player';
 import { resolveCollisions } from '../world/Collision';
 import { HubMap } from '../world/HubMap';
 import { Input } from './Input';
 import { initMobileUi } from './MobileUi';
+
+interface SkillButtonRefs {
+  slot: SwordSkillSlot;
+  root: HTMLElement;
+  overlay: HTMLElement | null;
+  timerText: HTMLElement | null;
+}
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
@@ -19,6 +26,7 @@ export class Game {
   private readonly moveStateEl: HTMLElement | null;
   private readonly dungeonPromptEl: HTMLElement | null;
   private readonly dungeonPromptTextEl: HTMLElement | null;
+  private readonly skillButtonRefs: SkillButtonRefs[] = [];
 
   private readonly moveWorldVec = new THREE.Vector3();
   private lastTime = performance.now();
@@ -71,6 +79,19 @@ export class Game {
     this.dungeonPromptTextEl = document.getElementById('dungeon-prompt-text');
     this.cleanupMobileUi = initMobileUi();
 
+    document
+      .querySelectorAll<HTMLElement>('[data-skill-slot]')
+      .forEach((root) => {
+        const slot = root.dataset.skillSlot as SwordSkillSlot | undefined;
+        if (!slot) return;
+        this.skillButtonRefs.push({
+          slot,
+          root,
+          overlay: root.querySelector<HTMLElement>('.skill-cd-fill'),
+          timerText: root.querySelector<HTMLElement>('.skill-cd-text'),
+        });
+      });
+
     window.addEventListener('resize', this.onResize);
   }
 
@@ -97,6 +118,11 @@ export class Game {
       moveInput.y,
       this.moveWorldVec,
     );
+
+    const triggeredSkills = this.input.consumeTriggeredSkills();
+    for (const slot of triggeredSkills) {
+      this.player.useSkill(slot, this.moveWorldVec);
+    }
 
     this.player.update(this.moveWorldVec, moveInput.sprint, dt, this.elapsed);
 
@@ -137,12 +163,36 @@ export class Game {
     }
 
     if (this.moveStateEl) {
-      if (this.player.isRunning()) {
+      const skillLabel = this.player.getActiveSkillLabel();
+      if (skillLabel) {
+        this.moveStateEl.textContent = skillLabel;
+      } else if (this.player.isRunning()) {
         this.moveStateEl.textContent = 'Correndo';
       } else if (this.player.isMoving()) {
         this.moveStateEl.textContent = 'Andando';
       } else {
         this.moveStateEl.textContent = 'Parado';
+      }
+    }
+
+    for (const ref of this.skillButtonRefs) {
+      const state = this.player.getSkillState(ref.slot);
+      ref.root.classList.toggle('is-active', state.active);
+      ref.root.classList.toggle('on-cooldown', !state.ready);
+
+      if (ref.overlay) {
+        const pct =
+          state.cooldownTotal > 0
+            ? (state.cooldownRemaining / state.cooldownTotal) * 100
+            : 0;
+        ref.overlay.style.height = `${pct.toFixed(1)}%`;
+      }
+      if (ref.timerText) {
+        ref.timerText.textContent = state.ready
+          ? ''
+          : state.cooldownRemaining >= 1
+            ? state.cooldownRemaining.toFixed(1)
+            : state.cooldownRemaining.toFixed(1);
       }
     }
 
