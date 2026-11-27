@@ -15,7 +15,7 @@ export class IsometricCamera {
   private zoomCurrent = 1.0;
 
   constructor(aspect: number) {
-    this.camera = new THREE.PerspectiveCamera(36, aspect, 0.1, 140);
+    this.camera = new THREE.PerspectiveCamera(36, aspect, 0.2, 260);
     this.camera.position.copy(this.baseOffset);
     this.camera.lookAt(this.lookAtOffset);
   }

@@ -6,6 +6,7 @@ import {
   type InteractionPrompt,
 } from '../world/Collision';
 import { DungeonMap } from '../world/DungeonMap';
+import { dungeonAssetLibrary } from '../world/DungeonAssets';
 import { HubMap } from '../world/HubMap';
 import {
   createDungeonTextures,
@@ -34,8 +35,8 @@ export class Game {
 
   private readonly hubBgColor = new THREE.Color('#cde0f5');
   private readonly hubFogColor = new THREE.Color('#d7e6f5');
-  private readonly dungeonBgColor = new THREE.Color('#090d18');
-  private readonly dungeonFogColor = new THREE.Color('#0c1222');
+  private readonly dungeonBgColor = new THREE.Color('#070b14');
+  private readonly dungeonFogColor = new THREE.Color('#0b1222');
 
   private dungeonTextures: DungeonTextureSet | null = null;
   private dungeonMap: DungeonMap | null = null;
@@ -182,8 +183,8 @@ export class Game {
       this.scene.add(nextMap.group);
       (this.scene.background as THREE.Color).copy(this.dungeonBgColor);
       this.sceneFog.color.copy(this.dungeonFogColor);
-      this.sceneFog.density = 0.0155;
-      this.renderer.toneMappingExposure = 1.14;
+      this.sceneFog.density = 0.0078;
+      this.renderer.toneMappingExposure = 1.18;
 
       document.body.classList.add('in-dungeon');
       this.minimapCanvas?.classList.remove('hidden');
@@ -414,8 +415,11 @@ export class Game {
       this.dungeonTextures.stoneFloorBump.dispose();
       this.dungeonTextures.corridorFloorMap.dispose();
       this.dungeonTextures.stoneWallMap.dispose();
+      this.dungeonTextures.cavernRockMap.dispose();
+      this.dungeonTextures.lightShaftMap.dispose();
       this.dungeonTextures = null;
     }
+    dungeonAssetLibrary.dispose();
 
     window.removeEventListener('resize', this.onResize);
     this.returnHubBtn?.removeEventListener('click', this.onReturnHubClick);

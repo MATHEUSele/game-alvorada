@@ -31,6 +31,26 @@ Todos os modelos abaixo são **CC0 1.0 Universal (Domínio Público)** — uso l
 | `public/models/characters/enemy_rat.glb` | Quaternius (`easy_enemies_pack`) | Inimigo Rato de catacumba |
 | `public/models/characters/enemy_skeleton_minion.glb` | KayKit (`Skeletons 1.0`) | Inimigo Esqueleto rigado para masmorras |
 
+### Masmorra, Arquitetura e Montanha Subterrânea (`public/models/dungeon/`)
+| Arquivo local | Origem / Autor | Uso ativo nas masmorras |
+|---|---|---|
+| `public/models/dungeon/pillar_decorated.glb` | KayKit (`Dungeon Remastered 1.0`) | Pilares decorados no interior das câmaras |
+| `public/models/dungeon/torch_mounted.glb` | KayKit (`Dungeon Remastered 1.0`) | Tochas de parede nas paredes altas com fogo dinâmico |
+| `public/models/dungeon/candle_triple.glb` | KayKit (`Dungeon Remastered 1.0`) | Velas decorativas em tesouros e santuário |
+| `public/models/dungeon/barrel_decorated.glb` | KayKit (`Dungeon Remastered 1.0`) | Barris em cantos das salas com colisor |
+| `public/models/dungeon/crates_stacked.glb` | KayKit (`Dungeon Remastered 1.0`) | Caixotes empilhados em câmaras |
+| `public/models/dungeon/rubble_large.glb` | KayKit (`Dungeon Remastered 1.0`) | Escombros decorativos de cantos |
+| `public/models/dungeon/banner_royal.glb` | KayKit (`Dungeon Remastered 1.0`) | Estandartes azuis nas paredes das salas |
+| `public/models/dungeon/chest_gold.glb` | KayKit (`Dungeon Remastered 1.0`) | Baú dourado nas salas de tesouro |
+| `public/models/dungeon/coin_stack.glb` | KayKit (`Dungeon Remastered 1.0`) | Pilha de moedas junto ao baú do tesouro |
+| `public/models/dungeon/wall_arched.glb` | KayKit (`Dungeon Remastered 1.0`) | Arco arquitetônico pré-carregado |
+| `public/models/dungeon/column_broken.glb` | Quaternius (`modular_dungeon_pack`) | Colunas em ruína nas câmaras e platôs do abismo |
+| `public/models/dungeon/candelabrum_tall.glb` | Quaternius (`modular_dungeon_pack`) | Candelabros altos flanqueando o portal inicial |
+| `public/models/dungeon/cave_wall_rocks.glb` | Quaternius (`modular_dungeon_pack`) | Afloramentos rochosos ao redor do mapa |
+| `public/models/dungeon/boulder_large.glb` | Quaternius (`nature_pack`) | Rochas grandes em platôs e penhascos |
+| `public/models/dungeon/mountain_group_1.glb` | Quaternius (`real_time_strategy_pack`) | Maciço montanhoso de background da caverna |
+| `public/models/dungeon/mountain_group_2.glb` | Quaternius (`real_time_strategy_pack`) | Maciço montanhoso complementar de background |
+
 ---
 
 ## 2. Pacotes Completos CC0 Recomendados para Expansão

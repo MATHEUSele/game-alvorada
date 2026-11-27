@@ -573,6 +573,8 @@ export interface DungeonTextureSet {
   stoneFloorBump: THREE.CanvasTexture;
   corridorFloorMap: THREE.CanvasTexture;
   stoneWallMap: THREE.CanvasTexture;
+  cavernRockMap: THREE.CanvasTexture;
+  lightShaftMap: THREE.CanvasTexture;
 }
 
 export function createDungeonTextures(maxAnisotropy = 4): DungeonTextureSet {
@@ -580,12 +582,16 @@ export function createDungeonTextures(maxAnisotropy = 4): DungeonTextureSet {
     createDungeonStoneFloorTextures(maxAnisotropy);
   const corridorFloorMap = createDungeonCorridorTexture(maxAnisotropy);
   const stoneWallMap = createDungeonWallTexture(maxAnisotropy);
+  const cavernRockMap = createCavernRockTexture(maxAnisotropy);
+  const lightShaftMap = createLightShaftTexture();
 
   return {
     stoneFloorMap,
     stoneFloorBump,
     corridorFloorMap,
     stoneWallMap,
+    cavernRockMap,
+    lightShaftMap,
   };
 }
 
@@ -606,10 +612,10 @@ function createDungeonStoneFloorTextures(maxAnisotropy: number): {
 
   const rng = mulberry32(9143);
 
-  ctx.fillStyle = '#19202e';
+  ctx.fillStyle = '#141a27';
   ctx.fillRect(0, 0, size, size);
 
-  bctx.fillStyle = '#6e6e6e';
+  bctx.fillStyle = '#525252';
   bctx.fillRect(0, 0, size, size);
 
   const tiles = 4;
@@ -619,28 +625,28 @@ function createDungeonStoneFloorTextures(maxAnisotropy: number): {
     for (let col = 0; col < tiles; col++) {
       const x = col * tilePx;
       const y = row * tilePx;
-      const shade = Math.floor(rng() * 14);
+      const shade = Math.floor(rng() * 18);
       const r = 34 + shade;
-      const g = 42 + shade;
-      const b = 58 + shade + Math.floor(rng() * 6);
+      const g = 43 + shade;
+      const b = 60 + shade + Math.floor(rng() * 8);
 
       ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       ctx.fillRect(x + 3, y + 3, tilePx - 6, tilePx - 6);
 
-      // Chanfro superior esquerdo discreto para leitura de grid
-      ctx.fillStyle = 'rgba(130, 158, 206, 0.14)';
-      ctx.fillRect(x + 3, y + 3, tilePx - 6, 3);
-      ctx.fillRect(x + 3, y + 3, 3, tilePx - 6);
+      // Chanfro superior esquerdo para leitura nítida da laje
+      ctx.fillStyle = 'rgba(154, 184, 232, 0.2)';
+      ctx.fillRect(x + 3, y + 3, tilePx - 6, 4);
+      ctx.fillRect(x + 3, y + 3, 4, tilePx - 6);
 
-      // Sombra inferior direita da laje
-      ctx.fillStyle = 'rgba(8, 12, 20, 0.45)';
-      ctx.fillRect(x + 3, y + tilePx - 6, tilePx - 6, 3);
-      ctx.fillRect(x + tilePx - 6, y + 3, 3, tilePx - 6);
+      // Sombra inferior direita mais funda
+      ctx.fillStyle = 'rgba(6, 9, 16, 0.56)';
+      ctx.fillRect(x + 3, y + tilePx - 7, tilePx - 6, 4);
+      ctx.fillRect(x + tilePx - 7, y + 3, 4, tilePx - 6);
 
-      // Veios frios sutis
-      if (rng() > 0.35) {
-        ctx.strokeStyle = 'rgba(116, 142, 184, 0.16)';
-        ctx.lineWidth = 1.5;
+      // Veios e trincas sutis
+      if (rng() > 0.28) {
+        ctx.strokeStyle = 'rgba(130, 158, 204, 0.2)';
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.moveTo(x + 12 + rng() * (tilePx - 24), y + 10);
         ctx.quadraticCurveTo(
@@ -650,12 +656,19 @@ function createDungeonStoneFloorTextures(maxAnisotropy: number): {
           y + tilePx - 12,
         );
         ctx.stroke();
+
+        bctx.strokeStyle = '#7c7c7c';
+        bctx.lineWidth = 1.4;
+        bctx.beginPath();
+        bctx.moveTo(x + 14 + rng() * (tilePx - 28), y + 12);
+        bctx.lineTo(x + tilePx * 0.55, y + tilePx * 0.65);
+        bctx.stroke();
       }
 
-      bctx.fillStyle = `rgb(${175 + shade}, ${175 + shade}, ${175 + shade})`;
+      bctx.fillStyle = `rgb(${188 + shade}, ${188 + shade}, ${188 + shade})`;
       bctx.fillRect(x + 4, y + 4, tilePx - 8, tilePx - 8);
-      bctx.strokeStyle = '#303030';
-      bctx.lineWidth = 5;
+      bctx.strokeStyle = '#202020';
+      bctx.lineWidth = 6;
       bctx.strokeRect(x + 1, y + 1, tilePx - 2, tilePx - 2);
     }
   }
@@ -753,5 +766,94 @@ function createDungeonWallTexture(maxAnisotropy: number): THREE.CanvasTexture {
   tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(1.5, 1.5);
   tex.anisotropy = maxAnisotropy;
+  return tex;
+}
+
+function createCavernRockTexture(maxAnisotropy: number): THREE.CanvasTexture {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const rng = mulberry32(8321);
+
+  ctx.fillStyle = '#0e1420';
+  ctx.fillRect(0, 0, size, size);
+
+  // Camadas orgânicas de rocha basáltica subterrânea
+  for (let i = 0; i < 240; i++) {
+    const px = rng() * size;
+    const py = rng() * size;
+    const r = 18 + rng() * 52;
+    const cool = rng() > 0.35;
+    const grad = ctx.createRadialGradient(px, py, 2, px, py, r);
+    grad.addColorStop(
+      0,
+      cool ? 'rgba(34, 48, 72, 0.36)' : 'rgba(18, 22, 34, 0.42)',
+    );
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Fissuras e veios minerais tênues no leito da caverna
+  for (let i = 0; i < 42; i++) {
+    ctx.strokeStyle =
+      rng() > 0.25 ? 'rgba(72, 124, 186, 0.16)' : 'rgba(176, 98, 48, 0.14)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    const x0 = rng() * size;
+    const y0 = rng() * size;
+    ctx.moveTo(x0, y0);
+    ctx.bezierCurveTo(
+      x0 + (rng() - 0.5) * 90,
+      y0 + (rng() - 0.5) * 90,
+      x0 + (rng() - 0.5) * 110,
+      y0 + (rng() - 0.5) * 110,
+      x0 + (rng() - 0.5) * 130,
+      y0 + (rng() - 0.5) * 130,
+    );
+    ctx.stroke();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = maxAnisotropy;
+  return tex;
+}
+
+function createLightShaftTexture(): THREE.CanvasTexture {
+  const w = 128;
+  const h = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(w, h);
+  const data = img.data;
+
+  for (let y = 0; y < h; y++) {
+    const v = y / (h - 1);
+    const verticalFade = Math.sin(Math.min(1, v * 1.04) * Math.PI) * (1 - v * 0.45);
+    for (let x = 0; x < w; x++) {
+      const u = (x / (w - 1)) * 2 - 1;
+      const horizontalFade = Math.pow(Math.max(0, 1 - u * u), 1.8);
+      const streak = 0.84 + 0.16 * Math.sin(u * 12);
+      const alpha = Math.max(0, Math.min(1, verticalFade * horizontalFade * streak));
+      const idx = (y * w + x) * 4;
+      data[idx + 0] = 158;
+      data[idx + 1] = 202;
+      data[idx + 2] = 255;
+      data[idx + 3] = Math.round(alpha * 255);
+    }
+  }
+
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
