@@ -5,7 +5,7 @@ Atualmente todas as entidades vivem em memória no runtime client-side (TypeScri
 
 - **Player (`src/entities/Player.ts`):**
   - Estado espacial e cinemático: `group` (`THREE.Group`), `radius` (`0.45`), `velocity` (`Vector3`), `targetVelocity` (`Vector3`), `walkSpeed` (`5.8`), `sprintSpeed` (`8.4`), `isSprinting` (`boolean`), impulso direcional (`dashTimer`, `dashSpeed`, `dashDir`).
-  - Estado de animação e combate: `mixer` (`THREE.AnimationMixer`), clipes cíclicos (`Idle`, `Walk`, `Run`), ações one-shot (`AttackSlash`, `SkillSpin`, `SkillThrust`, `SkillUlt`, `Dodge`), catálogo `SKILL_CONFIG` (`SwordSkillSlot = 'slash' | 'spin' | 'thrust' | 'ult'`) e `cooldowns` por slot.
+  - Estado de animação e combate: `mixer` (`THREE.AnimationMixer`), clipes cíclicos (`Idle`, `Walk`, `Run`), ações one-shot (`AttackSlash`, `AttackSlash2`, `AttackSlash3`, `SkillSpin`, `SkillThrust`, `SkillUlt`, `Dodge`), combo de 3 golpes no Corte Simples (`slashComboStep`, `slashComboWindow`), catálogo `SKILL_CONFIG` (`SwordSkillSlot = 'slash' | 'spin' | 'thrust' | 'ult'`) e `cooldowns` por slot.
   - **SwordVfx (`src/entities/SwordVfx.ts`):** efeitos visuais 3D temporizados (`slash`, `spin`, `thrust`, `ult`) acoplados ao `bodyPivot` do jogador.
   - **PlayerEquipmentSockets:** relação 1:1 com grupos anexados aos ossos do esqueleto (`head` → `Head`, `chest` → `Spine2`, `back` → `Spine2`, `rightHand` → `RightHand`, `leftHand` → `LeftHand`).
 - **MoveInput (`src/core/Input.ts`):** `{ x: number, y: number, sprint: boolean }`, unificando teclado e `TouchControls`.
